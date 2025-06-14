@@ -19,6 +19,22 @@
         "DEFAULT_CHAT_FRAME",
         "ItemRefTooltip",
         "ShoppingTooltip1",
-        "ShoppingTooltip2"
+        "ShoppingTooltip2",
+        "NORMAL_FONT_COLOR_CODE",
+        "ReloadUI",
+        "hash_SlashCmdList",
+        "FONT_COLOR_CODE_CLOSE",
+        "IsSecureCmd",
+        "NUM_CHAT_WINDOWS",
+        "ChatEdit_GetActiveWindow",
+        "ColorPickerFrame",
+        "NOT_BOUND",
+        "OKAY",
+        "SELECTED_CHAT_FRAME",
+        "SetDesaturation",
+        "CLOSE",
+        "ACCEPT",
+        "CANCEL",
+        "Settings"
     ]
 }
