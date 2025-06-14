@@ -9,14 +9,17 @@ local AceConsole = LibStub("AceConsole-3.0")
 -- Créer l'objet addon avec AceAddon
 local SPC = AceAddon:NewAddon("StatsPriorityColors", "AceEvent-3.0")
 
-
 -- Valeurs par défaut pour la base de données
 local defaults = {
     char = {
         logs = {},
         settings = {
-            debugEnabled = true,
-            enabledCategories = { ... }
+            debugEnabled = true, -- Activer la journalisation par défaut
+            chatOutputEnabled = true, -- Activer la sortie dans le Chat Frame par défaut
+            enabledCategories = {
+                SPEC = true, TOOLTIP = true, STAT = true, INIT = true,
+                EVENT = true, COLOR = true, DEBUG = true
+            }
         }
     }
 }
@@ -41,17 +44,18 @@ function SPC:WriteLog(message, category)
     local logs = self.db.char.logs[category]
     table.insert(logs, { timestamp = date("%Y-%m-%d %H:%M:%S"), message = message })
     if #logs > 1000 then table.remove(logs, 1) end
-    -- Convertir la couleur hexadécimale en RGB
-    local color = categoryColors[category] or "|cFF808080"
-    local r, g, b = 0.5, 0.5, 0.5 -- Gris par défaut
-    if color:match("^|cFF(%x%x)(%x%x)(%x%x)") then
-        r = tonumber(color:match("^|cFF(%x%x)"), 16) / 255
-        g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
-        b = tonumber(color:match("^|cFF%x%x%x%x(%x%x)"), 16) / 255
+    -- Afficher dans le Chat Frame si activé
+    if self.db.char.settings.chatOutputEnabled then
+        local color = categoryColors[category] or "|cFF808080"
+        local r, g, b = 0.5, 0.5, 0.5 -- Gris par défaut
+        if color:match("^|cFF(%x%x)(%x%x)(%x%x)") then
+            r = tonumber(color:match("^|cFF(%x%x)"), 16) / 255
+            g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
+            b = tonumber(color:match("^|cFF%x%x%x%x(%x%x)"), 16) / 255
+        end
+        DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
     end
-    DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
 end
-
 
 -- Tableaux d'options pour AceConfig
 local options = {
@@ -61,6 +65,20 @@ local options = {
             type = "group",
             name = "Debug",
             args = {
+                enableDebug = {
+                    type = "toggle",
+                    name = "Enable Debug Logging",
+                    desc = "Enable or disable all debug logs",
+                    get = function() return SPC.db.char.settings.debugEnabled end,
+                    set = function(_, value) SPC.db.char.settings.debugEnabled = value end,
+                },
+                chatOutput = {
+                    type = "toggle",
+                    name = "Enable Chat Output",
+                    desc = "Enable or disable debug logs in the Chat Frame",
+                    get = function() return SPC.db.char.settings.chatOutputEnabled end,
+                    set = function(_, value) SPC.db.char.settings.chatOutputEnabled = value end,
+                },
                 show = {
                     type = "execute",
                     name = "Afficher la fenêtre de débogage",
@@ -70,14 +88,6 @@ local options = {
                     type = "execute",
                     name = "Masquer la fenêtre de débogage",
                     func = function() SPC:HideDebugWindow() end
-                },
-                -- debug options
-                enableDebug = {
-                    type = "toggle",
-                    name = "Enable Debug Logging",
-                    desc = "Enable or disable all debug logs",
-                    get = function() return SPC.db.char.settings.debugEnabled end,
-                    set = function(_, value) SPC.db.char.settings.debugEnabled = value end,
                 }
             }
         }
@@ -131,6 +141,8 @@ function SPC:CreateLogsTab(container)
     
     -- Boutons de filtre
     local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR", "DEBUG" }
+    local btnALLcat
+
     for _, cat in ipairs(categories) do
         local btn = AceGUI:Create("Button")
         btn:SetText(cat)
@@ -159,10 +171,11 @@ function SPC:CreateLogsTab(container)
             scrollFrame:AddChild(label)
         end)
         container:AddChild(btn)
+        if cat == "All" then btnALLcat = btn end 
     end
     
     -- Affichage initial de tous les logs
-    btn:Fire("OnClick", "All")
+    btnALLcat:Fire("OnClick", "All")
 end
 
 function SPC:CreateOptionsTab(container)
@@ -173,6 +186,15 @@ function SPC:CreateOptionsTab(container)
         self.db.char.settings.debugEnabled = value
     end)
     container:AddChild(debugCb)
+    
+    local chatCb = AceGUI:Create("CheckBox")
+    chatCb:SetLabel("Enable Chat Output")
+    chatCb:SetValue(self.db.char.settings.chatOutputEnabled)
+    chatCb:SetCallback("OnValueChanged", function(widget, event, value)
+        self.db.char.settings.chatOutputEnabled = value
+    end)
+    container:AddChild(chatCb)
+    
     for cat, enabled in pairs(self.db.char.settings.enabledCategories) do
         local cb = AceGUI:Create("CheckBox")
         cb:SetLabel(cat)
@@ -198,7 +220,8 @@ end)
 
 -- Initialisation
 function SPC:OnInitialize()
-    self.db = AceDB:New("SPCDB", defaults, true)
+    self.db = AceDB:New("StatsPriorityColors", defaults, true)
+    self:WriteLog("Debug system initialized", "INIT")
 end
 
 -- Enregistrement des événements
