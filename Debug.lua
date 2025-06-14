@@ -9,14 +9,6 @@ local AceConsole = LibStub("AceConsole-3.0")
 -- Créer l'objet addon avec AceAddon
 local SPC = AceAddon:NewAddon("StatsPriorityColors", "AceEvent-3.0")
 
--- debug options
-local enableDebug = {
-    type = "toggle",
-    name = "Enable Debug Logging",
-    desc = "Enable or disable all debug logs",
-    get = function() return SPC.db.char.settings.debugEnabled end,
-    set = function(_, value) SPC.db.char.settings.debugEnabled = value end,
-}
 
 -- Valeurs par défaut pour la base de données
 local defaults = {
@@ -59,6 +51,8 @@ function SPC:WriteLog(message, category)
     end
     DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
 end
+
+
 -- Tableaux d'options pour AceConfig
 local options = {
     type = "group",
@@ -76,6 +70,14 @@ local options = {
                     type = "execute",
                     name = "Masquer la fenêtre de débogage",
                     func = function() SPC:HideDebugWindow() end
+                },
+                -- debug options
+                enableDebug = {
+                    type = "toggle",
+                    name = "Enable Debug Logging",
+                    desc = "Enable or disable all debug logs",
+                    get = function() return SPC.db.char.settings.debugEnabled end,
+                    set = function(_, value) SPC.db.char.settings.debugEnabled = value end,
                 }
             }
         }
@@ -164,6 +166,13 @@ function SPC:CreateLogsTab(container)
 end
 
 function SPC:CreateOptionsTab(container)
+    local debugCb = AceGUI:Create("CheckBox")
+    debugCb:SetLabel("Enable Debug Logging")
+    debugCb:SetValue(self.db.char.settings.debugEnabled)
+    debugCb:SetCallback("OnValueChanged", function(widget, event, value)
+        self.db.char.settings.debugEnabled = value
+    end)
+    container:AddChild(debugCb)
     for cat, enabled in pairs(self.db.char.settings.enabledCategories) do
         local cb = AceGUI:Create("CheckBox")
         cb:SetLabel(cat)
