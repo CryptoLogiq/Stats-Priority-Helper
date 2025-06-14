@@ -6,7 +6,6 @@ _G[addonName] = StatsPriorityColors
 -- Map localized class names to English
 local classLocalization = {
     ["Paladine"] = "PALADIN",
-    ["Guerrier"] = "WARRIOR",
 }
 
 -- Map of class specializations to relevant stats (in French, matching tooltip text)
@@ -30,26 +29,6 @@ local specToStats = {
             "Coup critique",
             "Hâte"
         }
-    },
-    ["WARRIOR"] = {
-        [1] = { -- Arms
-            "Force",
-            "Coup critique",
-            "Hâte",
-            "Maîtrise"
-        },
-        [2] = { -- Fury
-            "Force",
-            "Coup critique",
-            "Hâte",
-            "Maîtrise"
-        },
-        [3] = { -- Protection
-            "Force",
-            "Maîtrise",
-            "Parade",
-            "Esquive"
-        }
     }
 }
 
@@ -59,11 +38,6 @@ local specNames = {
         [1] = "Sacré",
         [2] = "Protection",
         [3] = "Rétribution"
-    },
-    ["WARRIOR"] = {
-        [1] = "Armes",
-        [2] = "Furie",
-        [3] = "Protection"
     }
 }
 
@@ -86,14 +60,6 @@ local function LogToFile(message)
     if #LogSPCDB.logs > 1000 then
         table.remove(LogSPCDB.logs, 1)
     end
-    DEFAULT_CHAT_FRAME:AddMessage("[StatsPriorityColors] " .. message, 0.7, 0.7, 1.0)
-end
-
--- Clear logs command
-SLASH_SPCCLEARLOGS1 = "/spcclearlogs"
-SlashCmdList["SPCCLEARLOGS"] = function()
-    LogSPCDB.logs = {}
-    DEFAULT_CHAT_FRAME:AddMessage("[StatsPriorityColors] Logs cleared")
 end
 
 -- Function to get the player's current specialization
@@ -103,9 +69,21 @@ local function GetPlayerSpec()
     
     local localizedClass, _ = UnitClass("player")
     local class = classLocalization[localizedClass] or localizedClass
-    local specIndex = GetPrimaryTalentTree() or 2
-    local specName = specNames[class] and specNames[class][specIndex] or "Unknown"
-
+    
+    if class ~= "PALADIN" then
+        message = "[SPEC] Classe non supportée : " .. tostring(class)
+        LogToFile(message)
+        return nil, nil
+    end
+    
+    local specIndex = GetPrimaryTalentTree()
+    if not specIndex then
+        message = "[SPEC] Spécialisation non détectée"
+        LogToFile(message)
+        return nil, nil
+    end
+    
+    local specName = specNames[class][specIndex] or "Unknown"
     message = "[SPEC] Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", Spec: " .. tostring(specName) .. " (Index: " .. specIndex .. ")"
     LogToFile(message)
     
@@ -169,8 +147,13 @@ local function ModifyTooltip(tooltip)
     end
 
     local class, specIndex = GetPlayerSpec()
-    local activeStats = specToStats[class] and specToStats[class][specIndex] or {}
+    if not class or not specIndex then
+        message = "[TOOLTIP] Classe ou spécialisation invalide"
+        LogToFile(message)
+        return
+    end
 
+    local activeStats = specToStats[class][specIndex] or {}
     if not activeStats[1] then
         message = "[TOOLTIP] No relevant stats for class=" .. tostring(class) .. " spec=" .. specIndex
         LogToFile(message)
@@ -182,7 +165,7 @@ local function ModifyTooltip(tooltip)
 
     local otherSpecsStats = {}
     for i = 1, 3 do
-        if i ~= specIndex and specToStats[class] and specToStats[class][i] then
+        if i ~= specIndex and specToStats[class][i] then
             for _, stat in ipairs(specToStats[class][i]) do
                 local exists = false
                 for _, existingStat in ipairs(otherSpecsStats) do
