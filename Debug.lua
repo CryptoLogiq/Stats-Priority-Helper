@@ -1,39 +1,44 @@
-local addonName, StatsPriorityColors = ...
-local AceAddon = LibStub("AceAddon-3.0")
-local AceConfig = LibStub("AceConfig-3.0")
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local addonName, addon = ...
 local AceGUI = LibStub("AceGUI-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConsole = LibStub("AceConsole-3.0")
+local AceConfig = LibStub("AceConfig-3.0")
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local SPC = LibStub("AceAddon-3.0"):NewAddon("StatsPriorityColors", "AceEvent-3.0")
 
--- Créer l'objet addon avec AceAddon
-local SPC = AceAddon:NewAddon("StatsPriorityColors", "AceEvent-3.0")
-
--- Valeurs par défaut pour la base de données
+-- Valeurs par défaut
 local defaults = {
     char = {
         logs = {},
         settings = {
-            debugEnabled = true, -- Activer la journalisation par défaut
-            chatOutputEnabled = true, -- Activer la sortie dans le Chat Frame par défaut
+            debugEnabled = true,
+            chatOutputEnabled = false, -- always false by defaut
             enabledCategories = {
-                SPEC = true, TOOLTIP = true, STAT = true, INIT = true,
-                EVENT = true, COLOR = true, DEBUG = true
+                SPEC = true,
+                TOOLTIP = true,
+                STAT = true,
+                INIT = true,
+                EVENT = true,
+                COLOR = true,
+                DEBUG = true
             }
         }
     }
 }
 
--- Couleurs pour les catégories de logs
+-- Couleurs des catégories
 local categoryColors = {
-    SPEC = "|cFF00FFFF",   -- Bleu
-    TOOLTIP = "|cFF00FF00", -- Vert
-    STAT = "|cFFFFFF00",   -- Jaune
-    INIT = "|cFF00FFFF",   -- Cyan
-    EVENT = "|cFFFF00FF",  -- Magenta
-    COLOR = "|cFFFFA500",  -- Orange
-    DEBUG = "|cFF808080"   -- Gris
+    SPEC = "|cFF00FFFF",
+    TOOLTIP = "|cFF00FF00",
+    STAT = "|cFFFFFF00",
+    INIT = "|cFF00FFFF",
+    EVENT = "|cFFFF00FF",
+    COLOR = "|cFFFFA500",
+    DEBUG = "|cFF808080"
 }
+
+-- Catégories de logs
+local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR", "DEBUG" }
 
 -- Fonction de journalisation
 function SPC:WriteLog(message, category)
@@ -44,10 +49,9 @@ function SPC:WriteLog(message, category)
     local logs = self.db.char.logs[category]
     table.insert(logs, { timestamp = date("%Y-%m-%d %H:%M:%S"), message = message })
     if #logs > 1000 then table.remove(logs, 1) end
-    -- Afficher dans le Chat Frame si activé
     if self.db.char.settings.chatOutputEnabled then
         local color = categoryColors[category] or "|cFF808080"
-        local r, g, b = 0.5, 0.5, 0.5 -- Gris par défaut
+        local r, g, b = 0.5, 0.5, 0.5
         if color:match("^|cFF(%x%x)(%x%x)(%x%x)") then
             r = tonumber(color:match("^|cFF(%x%x)"), 16) / 255
             g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
@@ -57,191 +61,262 @@ function SPC:WriteLog(message, category)
     end
 end
 
--- Tableaux d'options pour AceConfig
-local options = {
-    type = "group",
-    args = {
-        debug = {
-            type = "group",
-            name = "Debug",
-            args = {
-                enableDebug = {
-                    type = "toggle",
-                    name = "Enable Debug Logging",
-                    desc = "Enable or disable all debug logs",
-                    get = function() return SPC.db.char.settings.debugEnabled end,
-                    set = function(_, value) SPC.db.char.settings.debugEnabled = value end,
-                },
-                chatOutput = {
-                    type = "toggle",
-                    name = "Enable Chat Output",
-                    desc = "Enable or disable debug logs in the Chat Frame",
-                    get = function() return SPC.db.char.settings.chatOutputEnabled end,
-                    set = function(_, value) SPC.db.char.settings.chatOutputEnabled = value end,
-                },
-                show = {
-                    type = "execute",
-                    name = "Afficher la fenêtre de débogage",
-                    func = function() SPC:ShowDebugWindow() end
-                },
-                hide = {
-                    type = "execute",
-                    name = "Masquer la fenêtre de débogage",
-                    func = function() SPC:HideDebugWindow() end
-                }
-            }
-        }
-    }
-}
-
--- Enregistrer les options dans le panneau Blizzard
-AceConfig:RegisterOptionsTable("StatsPriorityColors", options)
-AceConfigDialog:AddToBlizOptions("StatsPriorityColors", "StatsPriorityColors")
-
 -- Fenêtre de débogage
-local debugWindow
-SPC.debugWindow = {isHidden=true}
 function SPC:ShowDebugWindow()
-    if not debugWindow then
-        debugWindow = AceGUI:Create("Frame")
-        debugWindow:SetTitle("StatsPriorityColors Debug")
-        debugWindow:SetWidth(600)
-        debugWindow:SetHeight(400)
-        debugWindow:EnableResize(false)
+    if not SPC.debugWindow then
+        SPC.debugWindow = AceGUI:Create("Frame")
+        SPC.debugWindow:SetTitle("StatsPriorityColors Debug")
+        SPC.debugWindow:SetWidth(800)
+        SPC.debugWindow:SetHeight(400)
+        SPC.debugWindow:EnableResize(false)
+        SPC.debugWindow:SetLayout("Flow")
         
-        -- Groupe d'onglets
-        local tabGroup = AceGUI:Create("TabGroup")
-        tabGroup:SetLayout("Flow")
-        tabGroup:SetTabs({
-            {text = "Logs", value = "logs"},
-            {text = "Options", value = "options"}
-        })
-        tabGroup:SetCallback("OnGroupSelected", function(container, event, group)
-            container:ReleaseChildren()
-            if group == "logs" then
-                SPC:CreateLogsTab(container)
-            elseif group == "options" then
-                SPC:CreateOptionsTab(container)
-            end
+        -- Cadre gauche pour la navigation
+        local leftGroup = AceGUI:Create("SimpleGroup")
+        leftGroup:SetLayout("List")
+        leftGroup:SetWidth(100)
+        leftGroup:SetFullHeight(true)
+        SPC.debugWindow:AddChild(leftGroup)
+        
+        -- Boutons de navigation
+        local logsBtn = AceGUI:Create("Button")
+        logsBtn:SetText("Logs")
+        logsBtn:SetWidth(98)
+        logsBtn:SetCallback("OnClick", function()
+            SPC.currentPanel = "logs"
+            SPC:ShowLogsPanel()
         end)
-        debugWindow:AddChild(tabGroup)
-        tabGroup:SelectTab("logs")
+        leftGroup:AddChild(logsBtn)
+        
+        local optionsBtn = AceGUI:Create("Button")
+        optionsBtn:SetText("Options")
+        optionsBtn:SetWidth(98)
+        optionsBtn:SetCallback("OnClick", function()
+            SPC.currentPanel = "options"
+            SPC:ShowOptionsPanel()
+        end)
+        leftGroup:AddChild(optionsBtn)
+        
+        -- Cadre droit pour le contenu
+        local rightGroup = AceGUI:Create("SimpleGroup")
+        rightGroup:SetLayout("Fill")
+        rightGroup:SetWidth(700)
+        rightGroup:SetFullHeight(true)
+        SPC.debugWindow:AddChild(rightGroup)
+        
+        -- Stocker les références
+        SPC.debugWindow.leftGroup = leftGroup
+        SPC.debugWindow.rightGroup = rightGroup
+        
+        -- Afficher le panneau Logs initialement
+        SPC.currentPanel = "logs"
+        SPC:ShowLogsPanel()
+    else
+        if SPC.currentPanel == "logs" then
+            SPC:ShowLogsPanel()
+        elseif SPC.currentPanel == "options" then
+            SPC:ShowOptionsPanel()
+        end
     end
-    debugWindow:Show()
+    SPC.debugWindow:Show()
     SPC.debugWindow.isHidden = false
 end
 
 function SPC:HideDebugWindow()
-    if debugWindow then
-        debugWindow:Hide()
+    if SPC.debugWindow then
+        SPC.debugWindow:Hide()
+        SPC.debugWindow.isHidden = true
     end
 end
 
-function SPC:CreateLogsTab(container)
-    local scrollFrame = AceGUI:Create("ScrollFrame")
-    scrollFrame:SetLayout("Flow")
-    container:AddChild(scrollFrame)  -- Ajouter le ScrollFrame au conteneur
+-- Afficher le panneau Logs
+function SPC:ShowLogsPanel()
+    local rightGroup = SPC.debugWindow.rightGroup
+    rightGroup:ReleaseChildren()
     
-    local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR", "DEBUG" }
-    local btnALLcat
+    -- Sous-cadre supérieur pour les onglets
+    local topTabs = AceGUI:Create("SimpleGroup")
+    topTabs:SetLayout("Flow")
+    topTabs:SetFullWidth(true)
+    topTabs:SetHeight(30)
+    rightGroup:AddChild(topTabs)
     
     for _, cat in ipairs(categories) do
-        local currentCat = cat
         local btn = AceGUI:Create("Button")
         btn:SetText(cat)
-        btn:SetWidth(100)
+        btn:SetWidth(98)
         btn:SetCallback("OnClick", function()
-            scrollFrame:ReleaseChildren()
-            local logText = ""
-            if currentCat == "All" then
-                for _, category in ipairs(categories) do
-                    if category ~= "All" and self.db.char.logs[category] then
-                        for _, log in ipairs(self.db.char.logs[category]) do
-                            logText = logText .. categoryColors[category] .. "[" .. log.timestamp .. "] [" .. category .. "]|r " .. log.message .. "\n"
-                        end
-                    end
-                end
-            else
-                if self.db.char.logs[currentCat] then
-                    for _, log in ipairs(self.db.char.logs[currentCat]) do
-                        logText = logText .. categoryColors[currentCat] .. "[" .. log.timestamp .. "] [" .. currentCat .. "]|r " .. log.message .. "\n"
-                    end
-                end
-            end
-            local label = AceGUI:Create("Label")
-            label:SetText(logText or "no logs find.")
-            label:SetFullWidth(true)
-            scrollFrame:AddChild(label)
+            SPC:DisplayLogs(cat)
         end)
-        container:AddChild(btn)
-        if cat == "All" then btnALLcat = btn end
+        topTabs:AddChild(btn)
     end
     
-    if btnALLcat then
-        btnALLcat:Fire("OnClick")  -- Déclencher l’affichage initial des logs
+    -- Sous-cadre inférieur pour le contenu
+    local contentArea = AceGUI:Create("ScrollFrame")
+    contentArea:SetLayout("Fill")
+    contentArea:SetFullWidth(true)
+    contentArea:SetHeight(370)
+    rightGroup:AddChild(contentArea)
+    
+    -- Afficher les logs "All" initialement
+    SPC:DisplayLogs("All")
+end
+
+-- Afficher les logs pour une catégorie
+function SPC:DisplayLogs(category)
+    local rightGroup = SPC.debugWindow.rightGroup
+    local contentArea = rightGroup.children[2]
+    if not contentArea then return end
+    contentArea:ReleaseChildren()
+    
+    local logText = ""
+    if category == "All" then
+        for _, cat in ipairs(categories) do
+            if cat ~= "All" and self.db.char.logs[cat] then
+                for _, log in ipairs(self.db.char.logs[cat]) do
+                    logText = logText .. categoryColors[cat] .. "[" .. log.timestamp .. "] [" .. cat .. "]|r " .. log.message .. "\n"
+                end
+            end
+        end
+    else
+        if self.db.char.logs[category] then
+            for _, log in ipairs(self.db.char.logs[category]) do
+                logText = logText .. categoryColors[category] .. "[" .. log.timestamp .. "] [" .. category .. "]|r " .. log.message .. "\n"
+            end
+        end
+    end
+    
+    local label = AceGUI:Create("Label")
+    label:SetText(logText or "Aucun log trouvé.")
+    label:SetFullWidth(true)
+    contentArea:AddChild(label)
+end
+
+-- Afficher le panneau Options
+function SPC:ShowOptionsPanel()
+    local rightGroup = SPC.debugWindow.rightGroup
+    rightGroup:ReleaseChildren()
+    
+    -- Sous-cadre supérieur pour les onglets
+    local topTabs = AceGUI:Create("SimpleGroup")
+    topTabs:SetLayout("Flow")
+    topTabs:SetFullWidth(true)
+    topTabs:SetHeight(30)
+    rightGroup:AddChild(topTabs)
+    
+    local tabs = { "Debug", "Personnage" }
+    for _, tab in ipairs(tabs) do
+        local btn = AceGUI:Create("Button")
+        btn:SetText(tab)
+        btn:SetWidth(98)
+        btn:SetCallback("OnClick", function()
+            SPC:DisplayOptions(tab)
+        end)
+        topTabs:AddChild(btn)
+    end
+    
+    -- Sous-cadre inférieur pour le contenu
+    local contentArea = AceGUI:Create("SimpleGroup")
+    contentArea:SetLayout("List")
+    contentArea:SetFullWidth(true)
+    contentArea:SetHeight(370)
+    rightGroup:AddChild(contentArea)
+    
+    -- Afficher l’onglet "Debug" initialement
+    SPC:DisplayOptions("Debug")
+end
+
+-- Afficher le contenu des options
+function SPC:DisplayOptions(tab)
+    local rightGroup = SPC.debugWindow.rightGroup
+    local contentArea = rightGroup.children[2]
+    if not contentArea then return end
+    contentArea:ReleaseChildren()
+    
+    if tab == "Debug" then
+        -- Case à cocher pour activer le débogage
+        local debugToggle = AceGUI:Create("CheckBox")
+        debugToggle:SetLabel("Activer le débogage")
+        debugToggle:SetValue(SPC.db.char.settings.debugEnabled)
+        debugToggle:SetDescription("Active ou désactive les messages de débogage dans le chat.")
+        debugToggle:SetCallback("OnValueChanged", function(widget, event, value)
+            SPC.db.char.settings.debugEnabled = value
+            SPC:WriteLog("Débogage " .. (value and "activé" or "désactivé"), "DEBUG")
+        end)
+        contentArea:AddChild(debugToggle)
+        
+        -- Case à cocher pour les logs dans le chat
+        local chatToggle = AceGUI:Create("CheckBox")
+        chatToggle:SetLabel("Afficher les logs dans le chat")
+        chatToggle:SetValue(SPC.db.char.settings.chatOutputEnabled)
+        chatToggle:SetDescription("Affiche les messages de débogage dans la fenêtre de chat.")
+        chatToggle:SetCallback("OnValueChanged", function(widget, event, value)
+            SPC.db.char.settings.chatOutputEnabled = value
+            SPC:WriteLog("Logs dans le chat " .. (value and "activés" or "désactivés"), "DEBUG")
+        end)
+        contentArea:AddChild(chatToggle)
+    elseif tab == "Personnage" then
+        local label = AceGUI:Create("Label")
+        label:SetText("Options spécifiques au personnage (à implémenter).")
+        label:SetFullWidth(true)
+        contentArea:AddChild(label)
     end
 end
 
-function SPC:CreateOptionsTab(container)
-    local debugCb = AceGUI:Create("CheckBox")
-    debugCb:SetLabel("Enable Debug Logging")
-    debugCb:SetValue(self.db.char.settings.debugEnabled)
-    debugCb:SetCallback("OnValueChanged", function(widget, event, value)
-        self.db.char.settings.debugEnabled = value
-    end)
-    container:AddChild(debugCb)
+-- Initialisation
+function SPC:OnInitialize()
+    self.db = AceDB:New("StatsPriorityColors", defaults, true)
+    self:WriteLog("Système de débogage initialisé", "INIT")
     
-    local chatCb = AceGUI:Create("CheckBox")
-    chatCb:SetLabel("Enable Chat Output")
-    chatCb:SetValue(self.db.char.settings.chatOutputEnabled)
-    chatCb:SetCallback("OnValueChanged", function(widget, event, value)
-        self.db.char.settings.chatOutputEnabled = value
-    end)
-    container:AddChild(chatCb)
-    
-    for cat, enabled in pairs(self.db.char.settings.enabledCategories) do
-        local cb = AceGUI:Create("CheckBox")
-        cb:SetLabel(cat)
-        cb:SetValue(enabled)
-        cb:SetCallback("OnValueChanged", function(widget, event, value)
-            self.db.char.settings.enabledCategories[cat] = value
-        end)
-        container:AddChild(cb)
-    end
+    -- Définir les options pour le menu in-game
+    local options = {
+        name = "StatsPriorityColors",
+        type = "group",
+        args = {
+            debugEnabled = {
+                type = "toggle",
+                name = "Activer le débogage",
+                desc = "Active ou désactive les messages de débogage dans le chat.",
+                get = function() return self.db.char.settings.debugEnabled end,
+                set = function(_, value)
+                    self.db.char.settings.debugEnabled = value
+                    self:WriteLog("Débogage " .. (value and "activé" or "désactivé"), "DEBUG")
+                end,
+            },
+            chatOutputEnabled = {
+                type = "toggle",
+                name = "Afficher les logs dans le chat",
+                desc = "Affiche les messages de débogage dans la fenêtre de chat.",
+                get = function() return self.db.char.settings.chatOutputEnabled end,
+                set = function(_, value)
+                    self.db.char.settings.chatOutputEnabled = value
+                    self:WriteLog("Logs dans le chat " .. (value and "activés" or "désactivés"), "DEBUG")
+                end,
+            },
+        },
+    }
+    AceConfig:RegisterOptionsTable("StatsPriorityColors", options)
+    AceConfigDialog:AddToBlizOptions("StatsPriorityColors", "StatsPriorityColors")
 end
 
 -- Commandes slash
 AceConsole:RegisterChatCommand("spc", function(input)
     local command, subcommand = strsplit(" ", input)
     if command == "debug" then
-        if subcommand then
-            if subcommand == "show" then
-                SPC:ShowDebugWindow()
-                SPC.debugWindow.isHidden = false
-            elseif subcommand == "hide" then
-                SPC.debugWindow.isHidden = false
-            elseif subcommand == "toggle" then
-                SPC.debugWindow.isHidden = not SPC.debugWindow.isHidden
-            end
-            --
-            if SPC.debugWindow.isHidden == true then
-                SPC:ShowDebugWindow()
-            else
+        if subcommand == "show" then
+            SPC:ShowDebugWindow()
+        elseif subcommand == "hide" then
+            SPC:HideDebugWindow()
+        elseif subcommand == "toggle" then
+            SPC.debugWindow.isHidden = not SPC.debugWindow.isHidden
+            if SPC.debugWindow.isHidden then
                 SPC:HideDebugWindow()
+            else
+                SPC:ShowDebugWindow()
             end
         end
     end
 end)
 
--- Initialisation
-function SPC:OnInitialize()
-    self.db = AceDB:New("StatsPriorityColors", defaults, true)
-    self:WriteLog("Debug system initialized", "INIT")
-end
-
--- Enregistrement des événements
-SPC:RegisterEvent("ADDON_LOADED", function(event, addon)
-    if addon == addonName then
-        SPC:WriteLog("ADDON_LOADED pour StatsPriorityColors", "INIT")
-    end
-end)
+-- Message de débogage pour confirmer le chargement
+SPC:WriteLog("Debug.lua chargé", "INIT")
