@@ -11,12 +11,10 @@
 
 ## Installation
 
-1. **Download** the latest release from the [Releases](https://github.com/CryptoLogiq/StatsPriorityColors/releases) page or clone the repository.
-2. **Extract** the `StatsPriorityColors` folder to your WoW AddOns directory:
-   - Windows: `C:\Program Files\World of Warcraft\_classic_\Interface\AddOns`
-   - Mac: `/Applications/World of Warcraft/_classic_/Interface/AddOns`
-3. **Launch WoW**: Ensure the addon is enabled in the AddOns menu at the character selection screen.
-4. **Enjoy**: Hover over items in-game to see color-coded stats in tooltips!
+1. Download the latest release from the [Releases](https://github.com/CryptoLogiq/StatsPriorityColors/releases) page or clone the repository.
+2. Extract the `StatsPriorityColors` folder to your WoW AddOns directory:
+3. Launch WoW: Ensure the addon is enabled in the AddOns menu at the character selection screen.
+4. Enjoy: Hover over items in-game to see color-coded stats in tooltips!
 
 ## Usage
 
