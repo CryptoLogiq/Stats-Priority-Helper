@@ -9,15 +9,22 @@ local AceConsole = LibStub("AceConsole-3.0")
 -- Créer l'objet addon avec AceAddon
 local SPC = AceAddon:NewAddon("StatsPriorityColors", "AceEvent-3.0")
 
+-- debug options
+local enableDebug = {
+    type = "toggle",
+    name = "Enable Debug Logging",
+    desc = "Enable or disable all debug logs",
+    get = function() return SPC.db.char.settings.debugEnabled end,
+    set = function(_, value) SPC.db.char.settings.debugEnabled = value end,
+}
+
 -- Valeurs par défaut pour la base de données
 local defaults = {
     char = {
         logs = {},
         settings = {
-            enabledCategories = {
-                SPEC = true, TOOLTIP = true, STAT = true, INIT = true,
-                EVENT = true, COLOR = true, DEBUG = true
-            }
+            debugEnabled = true,
+            enabledCategories = { ... }
         }
     }
 }
@@ -35,14 +42,23 @@ local categoryColors = {
 
 -- Fonction de journalisation
 function SPC:WriteLog(message, category)
+    if not self.db.char.settings.debugEnabled then return end
     category = category or "DEBUG"
     if not self.db.char.settings.enabledCategories[category] then return end
     if not self.db.char.logs[category] then self.db.char.logs[category] = {} end
     local logs = self.db.char.logs[category]
     table.insert(logs, { timestamp = date("%Y-%m-%d %H:%M:%S"), message = message })
     if #logs > 1000 then table.remove(logs, 1) end
+    -- Convertir la couleur hexadécimale en RGB
+    local color = categoryColors[category] or "|cFF808080"
+    local r, g, b = 0.5, 0.5, 0.5 -- Gris par défaut
+    if color:match("^|cFF(%x%x)(%x%x)(%x%x)") then
+        r = tonumber(color:match("^|cFF(%x%x)"), 16) / 255
+        g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
+        b = tonumber(color:match("^|cFF%x%x%x%x(%x%x)"), 16) / 255
+    end
+    DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
 end
-
 -- Tableaux d'options pour AceConfig
 local options = {
     type = "group",

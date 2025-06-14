@@ -3,6 +3,8 @@ local addonName, StatsPriorityColors = ...
 -- Stocker l'addon dans une table globale
 _G[addonName] = StatsPriorityColors
 
+local SPC = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityColors")
+
 -- Correspondance des noms de classes localisés vers l'anglais
 local classLocalization = {
     ["Paladine"] = "PALADIN",
@@ -48,24 +50,24 @@ local resetColor = "|r"
 
 -- Obtenir la spécialisation du joueur
 local function GetPlayerSpec()
-    StatsPriorityColors:WriteLog("Entering GetPlayerSpec", "SPEC")
+    SPC:WriteLog("Entering GetPlayerSpec", "SPEC")
     
     local localizedClass, _ = UnitClass("player")
     local class = classLocalization[localizedClass] or localizedClass
     
     if class ~= "PALADIN" then
-        StatsPriorityColors:WriteLog("Classe non supportée : " .. tostring(class), "SPEC")
+        SPC:WriteLog("Classe non supportée : " .. tostring(class), "SPEC")
         return nil, nil
     end
     
     local specIndex = GetPrimaryTalentTree()
     if not specIndex then
-        StatsPriorityColors:WriteLog("Spécialisation non détectée", "SPEC")
+        SPC:WriteLog("Spécialisation non détectée", "SPEC")
         return nil, nil
     end
     
     local specName = specNames[class][specIndex] or "Unknown"
-    StatsPriorityColors:WriteLog("Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", Spec: " .. tostring(specName) .. " (Index: " .. specIndex .. ")", "SPEC")
+    SPC:WriteLog("Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", Spec: " .. tostring(specName) .. " (Index: " .. specIndex .. ")", "SPEC")
     
     return class, specIndex
 end
@@ -73,7 +75,7 @@ StatsPriorityColors.GetPlayerSpec = GetPlayerSpec
 
 -- Vérifier la pertinence d'une stat
 local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
-    StatsPriorityColors:WriteLog("Checking stat: " .. (stat or "nil"), "STAT")
+    SPC:WriteLog("Checking stat: " .. (stat or "nil"), "STAT")
     
     if not stat then return nil, nil, nil end
 
@@ -84,7 +86,7 @@ local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
         for _, relevantStat in ipairs(activeStats) do
             local pattern = relevantStat:lower()
             if string.find(stat:lower(), pattern, 1, true) then
-                StatsPriorityColors:WriteLog("Matched active stat: " .. relevantStat, "STAT")
+                SPC:WriteLog("Matched active stat: " .. relevantStat, "STAT")
                 return relevantStat, "active", "active_bright"
             end
         end
@@ -92,7 +94,7 @@ local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
         for _, relevantStat in ipairs(otherSpecsStats) do
             local pattern = relevantStat:lower()
             if string.find(stat:lower(), pattern, 1, true) then
-                StatsPriorityColors:WriteLog("Matched other spec stat: " .. relevantStat, "STAT")
+                SPC:WriteLog("Matched other spec stat: " .. relevantStat, "STAT")
                 return relevantStat, "other", "other"
             end
         end
@@ -103,7 +105,7 @@ end
 
 -- Modifier le tooltip
 local function ModifyTooltip(tooltip)
-    StatsPriorityColors:WriteLog("ModifyTooltip called for " .. (tooltip:GetName() or "nil"), "TOOLTIP")
+    SPC:WriteLog("ModifyTooltip called for " .. (tooltip:GetName() or "nil"), "TOOLTIP")
     
     if not tooltip then return end
 
@@ -147,7 +149,7 @@ StatsPriorityColors.ModifyTooltip = ModifyTooltip
 
 -- Initialisation
 local function Initialize()
-    StatsPriorityColors:WriteLog("StatsPriorityColors loaded!", "INIT")
+    SPC:WriteLog("StatsPriorityColors loaded!", "INIT")
     
     GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
         ModifyTooltip(tooltip)
