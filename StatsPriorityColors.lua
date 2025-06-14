@@ -41,51 +41,31 @@ local specNames = {
     }
 }
 
--- Color codes
+-- Color codes for tooltips
 local activeColorBright = "|cFFFFA500" -- Bright orange for active stats
 local otherColor = "|cFF800080"        -- Purple for other specs
 local resetColor = "|r"
 
--- Logging function
-local function LogToFile(message)
-    if not LogSPCDB then
-        LogSPCDB = {}
-    end
-    if not LogSPCDB.logs then
-        LogSPCDB.logs = {}
-    end
-    local timestamp = date("%Y-%m-%d %H:%M:%S")
-    local logEntry = "[" .. timestamp .. "] " .. message
-    table.insert(LogSPCDB.logs, logEntry)
-    if #LogSPCDB.logs > 1000 then
-        table.remove(LogSPCDB.logs, 1)
-    end
-end
-
 -- Function to get the player's current specialization
 local function GetPlayerSpec()
-    local message = "[SPEC] Entering GetPlayerSpec"
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("Entering GetPlayerSpec", "SPEC")
     
     local localizedClass, _ = UnitClass("player")
     local class = classLocalization[localizedClass] or localizedClass
     
     if class ~= "PALADIN" then
-        message = "[SPEC] Classe non supportée : " .. tostring(class)
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("Classe non supportée : " .. tostring(class), "SPEC")
         return nil, nil
     end
     
     local specIndex = GetPrimaryTalentTree()
     if not specIndex then
-        message = "[SPEC] Spécialisation non détectée"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("Spécialisation non détectée", "SPEC")
         return nil, nil
-    end
+    }
     
     local specName = specNames[class][specIndex] or "Unknown"
-    message = "[SPEC] Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", Spec: " .. tostring(specName) .. " (Index: " .. specIndex .. ")"
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", Spec: " .. tostring(specName) .. " (Index: " .. specIndex .. ")", "SPEC")
     
     return class, specIndex
 end
@@ -93,42 +73,34 @@ StatsPriorityColors.GetPlayerSpec = GetPlayerSpec
 
 -- Function to check if a stat is relevant
 local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
-    local message = "[STAT] Checking stat: " .. (stat or "nil")
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("Checking stat: " .. (stat or "nil"), "STAT")
     
     if not stat then return nil, nil, nil end
 
-    -- Étape 1 : Créer variables et vérifier primary/secondary
     local primary = string.find(stat, "^%+") ~= nil
     local secondary = string.find(stat, "Équipé :") ~= nil
-    message = "[DEBUG] Primary: " .. tostring(primary) .. ", Secondary: " .. tostring(secondary)
-    LogToFile(message)
+    -- Removed verbose debug log to reduce queue size
+    -- StatsPriorityColors.WriteLog("Primary: " .. tostring(primary) .. ", Secondary: " .. tostring(secondary), "DEBUG")
 
-    -- Étape 2 : Si primary ou secondary est vrai
     if primary or secondary then
-        -- Étape 3 : Vérifier les stats dans specToStats
         for _, relevantStat in ipairs(activeStats) do
             local pattern = relevantStat:lower()
             if string.find(stat:lower(), pattern, 1, true) then
-                message = "[STAT] Matched active stat: " .. relevantStat
-                LogToFile(message)
+                StatsPriorityColors.WriteLog("Matched active stat: " .. relevantStat, "STAT")
                 return relevantStat, "active", "active_bright"
-            else
-                message = "[DEBUG] No match for active stat: " .. relevantStat
-                LogToFile(message)
             end
+            -- Removed verbose debug log to reduce queue size
+            -- StatsPriorityColors.WriteLog("No match for active stat: " .. relevantStat, "DEBUG")
         end
 
         for _, relevantStat in ipairs(otherSpecsStats) do
             local pattern = relevantStat:lower()
             if string.find(stat:lower(), pattern, 1, true) then
-                message = "[STAT] Matched other spec stat: " .. relevantStat
-                LogToFile(message)
+                StatsPriorityColors.WriteLog("Matched other spec stat: " .. relevantStat, "STAT")
                 return relevantStat, "other", "other"
-            else
-                message = "[DEBUG] No match for other stat: " .. relevantStat
-                LogToFile(message)
             end
+            -- Removed verbose debug log to reduce queue size
+            -- StatsPriorityColors.WriteLog("No match for other stat: " .. relevantStat, "DEBUG")
         end
     end
 
@@ -137,31 +109,26 @@ end
 
 -- Function to modify tooltip
 local function ModifyTooltip(tooltip)
-    local message = "[TOOLTIP] ModifyTooltip called for " .. (tooltip:GetName() or "nil")
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("ModifyTooltip called for " .. (tooltip:GetName() or "nil"), "TOOLTIP")
     
     if not tooltip then
-        message = "[TOOLTIP] Tooltip is nil"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("Tooltip is nil", "TOOLTIP")
         return
     end
 
     local class, specIndex = GetPlayerSpec()
     if not class or not specIndex then
-        message = "[TOOLTIP] Classe ou spécialisation invalide"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("Classe ou spécialisation invalide", "TOOLTIP")
         return
     end
 
     local activeStats = specToStats[class][specIndex] or {}
     if not activeStats[1] then
-        message = "[TOOLTIP] No relevant stats for class=" .. tostring(class) .. " spec=" .. specIndex
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("No relevant stats for class=" .. tostring(class) .. " spec=" .. specIndex, "TOOLTIP")
         return
     end
 
-    message = "[TOOLTIP] Active stats: [" .. table.concat(activeStats, ", ") .. "]"
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("Active stats: [" .. table.concat(activeStats, ", ") .. "]", "TOOLTIP")
 
     local otherSpecsStats = {}
     for i = 1, 3 do
@@ -184,16 +151,14 @@ local function ModifyTooltip(tooltip)
     for i = 2, tooltip:NumLines() do
         local line = _G[tooltip:GetName() .. "TextLeft" .. i]
         local text = line and line:GetText()
-        message = "[TOOLTIP] Line " .. i .. ": " .. (text or "nil")
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("Line " .. i .. ": " .. (text or "nil"), "TOOLTIP")
         
         if text then
             local matchedStat, statType, colorType = CheckStatRelevance(text, activeStats, otherSpecsStats)
             if matchedStat then
                 local color = (statType == "active") and activeColorBright or otherColor
                 line:SetText(color .. text .. resetColor)
-                message = "[COLOR] Colored stat: " .. matchedStat .. " as " .. (colorType or statType)
-                LogToFile(message)
+                StatsPriorityColors.WriteLog("Colored stat: " .. matchedStat .. " as " .. (colorType or statType), "COLOR")
             end
         end
     end
@@ -202,33 +167,23 @@ StatsPriorityColors.ModifyTooltip = ModifyTooltip
 
 -- Initialize addon
 local function Initialize()
-    local message = "[INIT] StatsPriorityColors loaded!"
-    LogToFile(message)
-    
-    message = "[INIT] addonName: " .. tostring(addonName)
-    LogToFile(message)
-
-    message = "[INIT] Setting up tooltip hooks"
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("StatsPriorityColors loaded!", "INIT")
+    StatsPriorityColors.WriteLog("Setting up tooltip hooks", "INIT")
     
     GameTooltip:HookScript("OnTooltipSetItem", function(tooltip)
-        local message = "[TOOLTIP] GameTooltip OnTooltipSetItem triggered"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("GameTooltip OnTooltipSetItem triggered", "TOOLTIP")
         ModifyTooltip(tooltip)
     end)
     ItemRefTooltip:HookScript("OnTooltipSetItem", function(tooltip)
-        local message = "[TOOLTIP] ItemRefTooltip OnTooltipSetItem triggered"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("ItemRefTooltip OnTooltipSetItem triggered", "TOOLTIP")
         ModifyTooltip(tooltip)
     end)
     ShoppingTooltip1:HookScript("OnTooltipSetItem", function(tooltip)
-        local message = "[TOOLTIP] ShoppingTooltip1 OnTooltipSetItem triggered"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("ShoppingTooltip1 OnTooltipSetItem triggered", "TOOLTIP")
         ModifyTooltip(tooltip)
     end)
     ShoppingTooltip2:HookScript("OnTooltipSetItem", function(tooltip)
-        local message = "[TOOLTIP] ShoppingTooltip2 OnTooltipSetItem triggered"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("ShoppingTooltip2 OnTooltipSetItem triggered", "TOOLTIP")
         ModifyTooltip(tooltip)
     end)
 end
@@ -239,20 +194,14 @@ frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 frame:SetScript("OnEvent", function(self, event, arg1)
-    local message = "[EVENT] Triggered: " .. event .. (arg1 and (", arg1: " .. arg1) or "")
-    LogToFile(message)
+    StatsPriorityColors.WriteLog("Triggered: " .. event .. (arg1 and (", arg1: " .. arg1) or ""), "EVENT")
     
     if event == "PLAYER_LOGIN" or (event == "ADDON_LOADED" and arg1 == addonName) then
         Initialize()
         self:UnregisterEvent("PLAYER_LOGIN")
         self:UnregisterEvent("ADDON_LOADED")
     elseif event == "PLAYER_TALENT_UPDATE" then
-        message = "[EVENT] Talent update detected, rechecking spec"
-        LogToFile(message)
+        StatsPriorityColors.WriteLog("Talent update detected, rechecking spec", "EVENT")
         GetPlayerSpec()
     end
 end)
-
--- Debug: Confirm frame creation
-local message = "[INIT] Event frame created and registered"
-LogToFile(message)
