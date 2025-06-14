@@ -1,0 +1,8 @@
+## Interface: 40400
+## Title: StatsPriorityColors
+## Notes: Changes the color of relevant stats in item tooltips based on the player's specialization.
+## Author: Crypto_Logiq
+## Version: 1.0
+## SavedVariablesPerCharacter: LogSPCDB
+
+StatsPriorityColors.lua
