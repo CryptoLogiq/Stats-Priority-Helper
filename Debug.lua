@@ -139,18 +139,18 @@ function SPC:CreateLogsTab(container)
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
     
-    -- Boutons de filtre
     local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR", "DEBUG" }
     local btnALLcat
-
+    
     for _, cat in ipairs(categories) do
+        local currentCat = cat  -- Capture la valeur courante de cat
         local btn = AceGUI:Create("Button")
         btn:SetText(cat)
         btn:SetWidth(100)
         btn:SetCallback("OnClick", function()
             scrollFrame:ReleaseChildren()
             local logText = ""
-            if cat == "All" then
+            if currentCat == "All" then
                 for _, category in ipairs(categories) do
                     if category ~= "All" and self.db.char.logs[category] then
                         for _, log in ipairs(self.db.char.logs[category]) do
@@ -159,9 +159,9 @@ function SPC:CreateLogsTab(container)
                     end
                 end
             else
-                if self.db.char.logs[cat] then
-                    for _, log in ipairs(self.db.char.logs[cat]) do
-                        logText = logText .. categoryColors[cat] .. "[" .. log.timestamp .. "] [" .. cat .. "]|r " .. log.message .. "\n"
+                if self.db.char.logs[currentCat] then
+                    for _, log in ipairs(self.db.char.logs[currentCat]) do
+                        logText = logText .. categoryColors[currentCat] .. "[" .. log.timestamp .. "] [" .. currentCat .. "]|r " .. log.message .. "\n"
                     end
                 end
             end
@@ -171,11 +171,12 @@ function SPC:CreateLogsTab(container)
             scrollFrame:AddChild(label)
         end)
         container:AddChild(btn)
-        if cat == "All" then btnALLcat = btn end 
+        if cat == "All" then btnALLcat = btn end
     end
     
-    -- Affichage initial de tous les logs
-    btnALLcat:Fire("OnClick", "All")
+    if btnALLcat then
+        btnALLcat:Fire("OnClick")
+    end
 end
 
 function SPC:CreateOptionsTab(container)
