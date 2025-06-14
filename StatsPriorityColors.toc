@@ -13,4 +13,4 @@ libs/Ace3/AceEvent-3.0/AceEvent-3.0.xml
 libs/Ace3/AceGUI-3.0/AceGUI-3.0.xml
 
 Debug.lua
-StatsPriorityColors.lua
+Core.lua
