@@ -100,6 +100,7 @@ AceConfigDialog:AddToBlizOptions("StatsPriorityColors", "StatsPriorityColors")
 
 -- Fenêtre de débogage
 local debugWindow
+SPC.debugWindow = {isHidden=true}
 function SPC:ShowDebugWindow()
     if not debugWindow then
         debugWindow = AceGUI:Create("Frame")
@@ -127,6 +128,7 @@ function SPC:ShowDebugWindow()
         tabGroup:SelectTab("logs")
     end
     debugWindow:Show()
+    SPC.debugWindow.isHidden = false
 end
 
 function SPC:HideDebugWindow()
@@ -138,12 +140,13 @@ end
 function SPC:CreateLogsTab(container)
     local scrollFrame = AceGUI:Create("ScrollFrame")
     scrollFrame:SetLayout("Flow")
+    container:AddChild(scrollFrame)  -- Ajouter le ScrollFrame au conteneur
     
     local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR", "DEBUG" }
     local btnALLcat
     
     for _, cat in ipairs(categories) do
-        local currentCat = cat  -- Capture la valeur courante de cat
+        local currentCat = cat
         local btn = AceGUI:Create("Button")
         btn:SetText(cat)
         btn:SetWidth(100)
@@ -166,7 +169,7 @@ function SPC:CreateLogsTab(container)
                 end
             end
             local label = AceGUI:Create("Label")
-            label:SetText(logText)
+            label:SetText(logText or "no logs find.")
             label:SetFullWidth(true)
             scrollFrame:AddChild(label)
         end)
@@ -175,7 +178,7 @@ function SPC:CreateLogsTab(container)
     end
     
     if btnALLcat then
-        btnALLcat:Fire("OnClick")
+        btnALLcat:Fire("OnClick")  -- Déclencher l’affichage initial des logs
     end
 end
 
@@ -211,10 +214,21 @@ end
 AceConsole:RegisterChatCommand("spc", function(input)
     local command, subcommand = strsplit(" ", input)
     if command == "debug" then
-        if subcommand == "show" then
-            SPC:ShowDebugWindow()
-        elseif subcommand == "hide" then
-            SPC:HideDebugWindow()
+        if subcommand then
+            if subcommand == "show" then
+                SPC:ShowDebugWindow()
+                SPC.debugWindow.isHidden = false
+            elseif subcommand == "hide" then
+                SPC.debugWindow.isHidden = false
+            elseif subcommand == "toggle" then
+                SPC.debugWindow.isHidden = not SPC.debugWindow.isHidden
+            end
+            --
+            if SPC.debugWindow.isHidden == true then
+                SPC:ShowDebugWindow()
+            else
+                SPC:HideDebugWindow()
+            end
         end
     end
 end)
