@@ -1,8 +1,16 @@
 ## Interface: 40400
 ## Title: StatsPriorityColors
-## Notes: Changes the color of relevant stats in item tooltips based on the player's specialization.
+## Notes: Changes la couleur des stats pertinentes dans les tooltips des objets en fonction de la spécialisation du joueur.
 ## Author: Crypto_Logiq
 ## Version: 1.0
-## SavedVariablesPerCharacter: LogSPCDB
+## SavedVariablesPerCharacter: StatsPriorityColors
 
-StatsPriorityColors.lua
+libs/Ace3/AceAddon-3.0/AceAddon-3.0.xml
+libs/Ace3/AceConfig-3.0/AceConfig-3.0.xml
+libs/Ace3/AceConsole-3.0/AceConsole-3.0.xml
+libs/Ace3/AceDB-3.0/AceDB-3.0.xml
+libs/Ace3/AceEvent-3.0/AceEvent-3.0.xml
+libs/Ace3/AceGUI-3.0/AceGUI-3.0.xml
+
+Debug.lua
+Core.lua
