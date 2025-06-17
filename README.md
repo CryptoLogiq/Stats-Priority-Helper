@@ -9,6 +9,8 @@
 - **Performance-Friendly**: Built to be lightweight with minimal impact on game performance.
 - **Debug Logging**: Includes a robust logging system to help troubleshoot issues (saved per character).
 
+[![Demo](https://go.screenpal.com/watch/cT1b3vnXySR)]
+
 ## Installation
 
 1. **Download** the latest release from the [Releases](https://github.com/CryptoLogiq/StatsPriorityColors/releases) page or clone the repository.
