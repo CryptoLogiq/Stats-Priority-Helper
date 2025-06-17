@@ -34,7 +34,8 @@ local function GetPlayerSpec(isInspect, isPet, talentGroup)
         return nil, nil
     end
     
-    local specPrimary = GetPrimaryTalentTree(isInspect or false, isPet or false, 1)
+    -- local specPrimary = GetPrimaryTalentTree(isInspect or false, isPet or false, 1)
+    local specPrimary = GetActiveTalentGroup(isInspect or false, isPet or false, 1)
     local specSecondary = GetPrimaryTalentTree(isInspect or false, isPet or false, 2) or 0
     if not specPrimary then
         SPC:WriteLog("Spécialisation non détectée", "SPEC")
@@ -52,23 +53,19 @@ end
 StatsPriorityColors.GetPlayerSpec = GetPlayerSpec
 
 -- Vérifier la pertinence d'une stat
---[[
-]]
-local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
+local function CheckStatRelevance(stat, activeStats, otherSpecsStats)  
+    if not stat then SPC:WriteLog(debugOutput.." [Error CheckStat as No stat...]", "STAT"); return nil, nil, nil end
+    
     local debugOutput = "Checking stat: " .. tostring(stat or "nil")
     
-    if not stat then SPC:WriteLog(debugOutput.." [No stat...]", "STAT"); return nil, nil, nil end
-    
-    -- local primary = ( string.find(string.lower(stat), "^%+") or string.find(stat, "^%+") ) ~= nil
-    -- local secondary = ( string.find(stat, "Équipé :") or string.find(string.lower(stat), "Équipé :") ) ~= nil
-    
-    -- if primary or secondary then
+    local primarySpecMatched = false
+    local secondarySpecMatched = false
     for _, relevantStat in ipairs(activeStats) do
         local pattern = relevantStat:lower()
         if string.find(stat:lower(), pattern, 1, true) then
             debugOutput = debugOutput .. "[Matched active stat: " .. relevantStat.."]"
             SPC:WriteLog(debugOutput, "STAT")
-            return relevantStat, "active", "active_bright"
+            primarySpecMatched = true
         end
     end
     
@@ -77,11 +74,21 @@ local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
         if string.find(stat:lower(), pattern, 1, true) then
             debugOutput = debugOutput .. "[Matched other stat: " .. relevantStat.."]"
             SPC:WriteLog(debugOutput, "STAT")
-            return relevantStat, "other", "other"
+            secondarySpecMatched = true
         end
     end
-    -- end
-    return nil, nil, nil
+    
+    if primarySpecMatched or secondarySpecMatched then
+        if primarySpecMatched and secondarySpecMatched then
+            return true, "alls", "active_bright"
+        elseif primarySpecMatched then
+            return true, "active", "active_bright"
+        else
+            return true, "other", "other"
+        end
+    end
+    
+    return false, false, false
 end
 
 -- Modifier le tooltip
@@ -105,14 +112,29 @@ local function ModifyTooltip(tooltip)
         end
     end
     
+    local specPrimaryName = specNames[class][specPrimary] or "Unknown"
+    local specSecondaryName = "Unknown"
+    if specSecondary then
+        specSecondaryName = specNames[class][specSecondary] or "Unknown"
+    end
+    
     for i = 2, tooltip:NumLines() do
         local line = _G[tooltip:GetName() .. "TextLeft" .. i]
         local text = line and line:GetText()
         if text then
             local matchedStat, statType, _ = CheckStatRelevance(text, activeStats, otherSpecsStats)
             if matchedStat then
-                local color = (statType == "active") and activeColorBright or otherColor
-                line:SetText(color .. text .. resetColor)
+                local color = activeColorBright
+                if statType == "alls" then
+                    line:SetText(color .. text .. " ("..specPrimaryName..","..specSecondaryName..") " .. resetColor)
+                    
+                elseif statType == "active" then
+                    line:SetText(color .. text .. " ("..specPrimaryName..") ".. resetColor)
+                    
+                elseif statType == "other" then
+                    color = otherColor
+                    line:SetText(color .. text .. " ("..specSecondaryName..") ".. resetColor)
+                end
             end
         end
     end
@@ -151,6 +173,3 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         GetPlayerSpec()
     end
 end)
-
--- Message de débogage pour confirmer le chargement
-SPC:WriteLog("Debug.lua chargé", "INIT")
