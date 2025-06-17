@@ -42,26 +42,22 @@ local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR",
 
 -- Fonction de journalisation
 function SPC:WriteLog(message, category)
-    if self.db then
-        
-        if not self.db.char.settings.debugEnabled then return end
-        category = category or "DEBUG"
-        if not self.db.char.settings.enabledCategories[category] then return end
-        if not self.db.char.logs[category] then self.db.char.logs[category] = {} end
-        local logs = self.db.char.logs[category]
-        table.insert(logs, { timestamp = date("%Y-%m-%d %H:%M:%S"), message = message })
-        if #logs > 300 then table.remove(logs, 1) end
-        if self.db.char.settings.chatOutputEnabled then
-            local color = categoryColors[category] or "|cFF808080"
-            local r, g, b = 0.5, 0.5, 0.5
-            if color:match("^|cFF(%x%x)(%x%x)(%x%x)") then
-                r = tonumber(color:match("^|cFF(%x%x)"), 16) / 255
-                g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
-                b = tonumber(color:match("^|cFF%x%x%x%x(%x%x)"), 16) / 255
-            end
-            DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
+    if not self.db.char.settings.debugEnabled then return end
+    category = category or "DEBUG"
+    if not self.db.char.settings.enabledCategories[category] then return end
+    if not self.db.char.logs[category] then self.db.char.logs[category] = {} end
+    local logs = self.db.char.logs[category]
+    table.insert(logs, { timestamp = date("%Y-%m-%d %H:%M:%S"), message = message })
+    if #logs > 1000 then table.remove(logs, 1) end
+    if self.db.char.settings.chatOutputEnabled then
+        local color = categoryColors[category] or "|cFF808080"
+        local r, g, b = 0.5, 0.5, 0.5
+        if color:match("^|cFF(%x%x)(%x%x)(%x%x)") then
+            r = tonumber(color:match("^|cFF(%x%x)"), 16) / 255
+            g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
+            b = tonumber(color:match("^|cFF%x%x%x%x(%x%x)"), 16) / 255
         end
-        
+        DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
     end
 end
 
@@ -321,3 +317,6 @@ AceConsole:RegisterChatCommand("spc", function(input)
         end
     end
 end)
+
+-- Message de débogage pour confirmer le chargement
+SPC:WriteLog("Debug.lua chargé", "INIT")

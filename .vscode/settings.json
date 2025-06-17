@@ -35,6 +35,7 @@
         "CLOSE",
         "ACCEPT",
         "CANCEL",
-        "Settings"
+        "Settings",
+        "class"
     ]
 }
