@@ -9,7 +9,7 @@
 - **Performance-Friendly**: Built to be lightweight with minimal impact on game performance.
 - **Debug Logging**: Includes a robust logging system to help troubleshoot issues (saved per character).
 
-[![Demo](https://go.screenpal.com/watch/cT1b3vnXySR)]
+https://github.com/user-attachments/assets/6cb265ea-c9e5-4900-ae73-63bf199a1dec
 
 ## Installation
 
