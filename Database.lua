@@ -20,9 +20,9 @@ local classLocalization = {
 -- Correspondance des spécialisations aux stats pertinentes (en français)
 local specToStats = {
     ["PALADIN"] = {
-        {"Intelligence", "Esprit", "Puissance des sorts", "Hâte" },-- 1 Sacré
-        { "Force", "Maîtrise", "Parade", "Esquive" },-- 2 Protection
-        {"Force", "Maîtrise", "Coup critique", "Hâte" } -- 3 Rétribution
+        {"Intelligence", "Puissance des sorts", "Hâte", "Esprit", "Critique", "Maîtrise" },-- 1 Sacré
+        { "Endurance", "Maîtrise", "Toucher", "Expertise", "Esquive", "Parade", "Critique" },-- 2 Protection
+        {"Force", "Maîtrise", "Toucher 8%", "Expertise", "Critique", "Hâte" } -- 3 Rétribution
     }
 }
 
