@@ -10,6 +10,7 @@
 - **Debug Logging**: Includes a robust logging system to help troubleshoot issues (saved per character).
 
 (Alpha preview, not representative to actually state of addon.)
+
 https://github.com/user-attachments/assets/6cb265ea-c9e5-4900-ae73-63bf199a1dec
 
 ## Installation
