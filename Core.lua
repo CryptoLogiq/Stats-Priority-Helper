@@ -13,8 +13,8 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local SPC = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityColors")
 
 -- Codes de couleur pour les tooltips
-local activeColorBright = "|cFFFFA500" -- Orange vif pour les stats actives
-local otherColor = "|cFF800080"        -- Violet pour les autres spés
+local activeColorBright = "|cFFFFA500" -- Orange (#FFA500) , comme pour les objets épiques, pour indiquer l'importance.
+local otherColor = "|cFF00FFFF"        -- Cyan (#00FFFF), visible et distinct, évitant le violet peu lisible.
 local resetColor = "|r"
 
 -- Database :
@@ -22,33 +22,77 @@ local classLocalization = SPC.classLocalization or {}
 local specToStats = SPC.specToStats or {}
 local specNames = SPC.specNames or {}
 
+-- var locales for self player connected
+local localizedClass = nil
+local class = nil
+local specPrimaryID = nil
+local specSecondaryID = nil
+local specPrimaryName = nil
+local specSecondaryName = nil
+local specPrimaryIcon = nil
+local specSecondarIcon = nil
+
+-- Obtenir l'icone de la spécialisation
+local function GetSpecIcon(specIndex)
+    if GetSpecializationInfo then
+        local specID = GetSpecializationInfo(specIndex)
+        if specID then
+            local _, _, _, icon = GetSpecializationInfo(specIndex)
+            return icon
+        end
+    end
+    return nil
+end
+StatsPriorityColors.GetSpecIcon = GetSpecIcon
+
+
 -- Obtenir la spécialisation du joueur
 local function GetPlayerSpec(isInspect, isPet, talentGroup)
     SPC:WriteLog("Entering GetPlayerSpec", "SPEC")
     
-    local localizedClass, _ = UnitClass("player")
-    local class = classLocalization[localizedClass] or localizedClass
+    if not localizedClass then
+        localizedClass, _ = UnitClass("player")
+        class = classLocalization[localizedClass] or localizedClass
+    end
     
     if class ~= "PALADIN" then
         SPC:WriteLog("Classe non supportée : " .. tostring(class), "SPEC")
         return nil, nil
     end
     
-    -- local specPrimary = GetPrimaryTalentTree(isInspect or false, isPet or false, 1)
-    local specPrimary = GetActiveTalentGroup(isInspect or false, isPet or false, 1)
-    local specSecondary = GetPrimaryTalentTree(isInspect or false, isPet or false, 2) or 0
-    if not specPrimary then
-        SPC:WriteLog("Spécialisation non détectée", "SPEC")
-        return nil, nil
+    
+    -- local specPrimaryID = GetPrimaryTalentTree(isInspect or false, isPet or false, 1)
+    if not specPrimaryID then
+        specPrimaryID = GetActiveTalentGroup(isInspect or false, isPet or false, 1)
+        specSecondaryID = GetPrimaryTalentTree(isInspect or false, isPet or false, 2) or false
+        if not specPrimaryID then
+            SPC:WriteLog("Spécialisation non détectée", "SPEC")
+            return nil, nil
+        else
+            
+            specPrimaryIcon = GetSpecIcon()
+            
+            if specSecondaryID then
+                specSecondarIcon = GetSpecIcon(specSecondaryID)
+            end
+        end
     end
     
-    local specPrimaryName = specNames[class][specPrimary] or "Unknown"
-    local specSecondaryName = specNames[class][specSecondary] or "Unknown"
-    local message = "Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", spec Primary ["..tostring(specPrimary).."] " .. tostring(specPrimaryName)
-    message = message.. ", (spec Secondary ["..tostring(specSecondary).."] " .. tostring(specSecondaryName) .. ")"
+    
+    if not specPrimaryName then
+        
+        specPrimaryName = specNames[class][specPrimaryID] or "Unknown"
+        
+        if specSecondaryID then
+            specSecondaryName = specNames[class][specSecondaryID] or "Unknown"
+        end
+    end
+    
+    local message = "Localized Class: " .. tostring(localizedClass) .. ", Mapped Class: " .. tostring(class) .. ", spec Primary ["..tostring(specPrimaryID).."] " .. tostring(specPrimaryName)
+    message = message.. ", (spec Secondary ["..tostring(specSecondaryID).."] " .. tostring(specSecondaryName) .. ")"
     SPC:WriteLog( message, "SPEC")
     
-    return class, specPrimary, specSecondary
+    return class, specPrimaryID, specSecondaryID
 end
 StatsPriorityColors.GetPlayerSpec = GetPlayerSpec
 
@@ -97,25 +141,25 @@ local function ModifyTooltip(tooltip)
     
     if not tooltip then return end
     
-    local class, specPrimary, specSecondary = GetPlayerSpec()
-    if not class or not specPrimary then return end
+    local class, specPrimaryID, specSecondaryID = GetPlayerSpec()
+    if not class or not specPrimaryID then return end
     
-    local activeStats = specToStats[class][specPrimary] or {}
+    local activeStats = specToStats[class][specPrimaryID] or {}
     if not activeStats[1] then return end
     
     local otherSpecsStats = {}
-    if specSecondary then
-        if specToStats[class][specSecondary] then
-            for _, stat in ipairs(specToStats[class][specSecondary]) do
+    if specSecondaryID then
+        if specToStats[class][specSecondaryID] then
+            for _, stat in ipairs(specToStats[class][specSecondaryID]) do
                 table.insert(otherSpecsStats, stat)
             end
         end
     end
     
-    local specPrimaryName = specNames[class][specPrimary] or "Unknown"
+    local specPrimaryName = specNames[class][specPrimaryID] or "Unknown"
     local specSecondaryName = "Unknown"
-    if specSecondary then
-        specSecondaryName = specNames[class][specSecondary] or "Unknown"
+    if specSecondaryID then
+        specSecondaryName = specNames[class][specSecondaryID] or "Unknown"
     end
     
     for i = 2, tooltip:NumLines() do
