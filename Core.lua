@@ -16,6 +16,7 @@ local SPC = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityColors")
 local primaryColor = "|cFFFFA500" -- Orange (#FFA500) , comme pour les objets épiques, pour indiquer l'importance.
 local secondColor = "|cFF00FFFF"        -- Cyan (#00FFFF), mets une legere evidence pour la seconde spécialisation.
 local badColor = "|cFFFF0000"        -- Red (#00FFFF), mets en rouge car on s'en fou de cette stat...
+local greenColor = "|cFFAAD372"        -- Red (#00FFFF), mets en rouge car on s'en fou de cette stat...
 local resetColor = "|r"
 
 -- Database :
@@ -169,9 +170,9 @@ end
 
 -- Modifier le tooltip
 local function ModifyTooltip(tooltip)
-
+    
     if tooltip ~= GameTooltip then return end
-
+    
     SPC:WriteLog("ModifyTooltip called for " .. (tooltip:GetName() or "nil"), "TOOLTIP")
     
     if not tooltip then return end
@@ -204,7 +205,7 @@ local function ModifyTooltip(tooltip)
     if specSecondaryID and not specSecondaryName then
         specSecondaryName = specNames[class][specSecondaryID] or "Unknown"
     end
-
+    
     local count = {matched=false, primary = 0, secondary = 0, bad = 0}
     
     for i = 2, tooltip:NumLines() do
@@ -216,27 +217,45 @@ local function ModifyTooltip(tooltip)
             if matchedStat then
                 count.matched = true
                 if statType == "alls" then
-                    line:SetText(color..text..resetColor.." ["..primaryColor..specPrimaryName..resetColor.." + "..secondColor..specSecondaryName..resetColor.."]")
+                    line:SetText(text..resetColor.." ["..primaryColor..specPrimaryName..resetColor.." + "..secondColor..specSecondaryName..resetColor.."]")
                     count.primary = count.primary + 1
                     count.secondary = count.secondary + 1
                 elseif statType == "active" then
-                    line:SetText(color..text..resetColor.." ["..secondColor..specPrimaryName..resetColor.."]")
+                    line:SetText(text..resetColor.." ["..primaryColor..specPrimaryName..resetColor.."]")
                     count.primary = count.primary + 1
                 elseif statType == "second" then
-                    line:SetText(color..text..resetColor.." ["..secondColor..specSecondaryName..resetColor.."]")
+                    line:SetText(text..resetColor.." ["..secondColor..specSecondaryName..resetColor.."]")
                     count.secondary = count.secondary + 1
                 elseif statType == "badStats" then
-                    line:SetText(resetColor .. text..badColor.." [ BAD ]"..resetColor)
+                    line:SetText(text..badColor.." [ BAD ]"..resetColor)
                     count.bad = count.bad + 1
                 end
             end
         end
     end
-
+    
     if count.matched then
-        
+        local prim, sec, bad = false, false, false
+        if count.primary >= count.secondary and count.primary > count.bad then
+            prim = true
+        end
+        if count.secondary >= count.primary and count.secondary > count.bad then
+            sec = true
+        end
+        if count.bad >= count.primary and count.bad >= count.secondary then
+            bad = true
+        end
+        if prim and sec then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. greenColor.." This item is good for your spec :"..greenColor.." ["..primaryColor..specPrimaryName..greenColor.." + "..secondColor..specSecondaryName..greenColor.."]"..resetColor)
+        elseif prim then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. greenColor.." This item is good for your spec :"..greenColor.." ["..secondColor..specPrimaryName..greenColor.."]"..resetColor)
+        elseif sec then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. greenColor.." This item is good for your spec :"..greenColor.." ["..secondColor..specSecondaryName..greenColor.."]"..resetColor)
+        elseif bad then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. badColor.." This item is not for you !"..resetColor)
+        end
     end
-
+    
 end
 StatsPriorityColors.ModifyTooltip = ModifyTooltip
 
