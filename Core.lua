@@ -13,8 +13,10 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local SPC = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityColors")
 
 -- Codes de couleur pour les tooltips
-local activeColorBright = "|cFFFFA500" -- Orange (#FFA500) , comme pour les objets épiques, pour indiquer l'importance.
-local otherColor = "|cFF00FFFF"        -- Cyan (#00FFFF), visible et distinct, évitant le violet peu lisible.
+local primaryColor = "|cFFFFA500" -- Orange (#FFA500) , comme pour les objets épiques, pour indiquer l'importance.
+local secondColor = "|cFF00FFFF"        -- Cyan (#00FFFF), mets une legere evidence pour la seconde spécialisation.
+local badColor = "|cFFFF0000"        -- Red (#00FFFF), mets en rouge car on s'en fou de cette stat...
+local greenColor = "|cFFAAD372"        -- Red (#00FFFF), mets en rouge car on s'en fou de cette stat...
 local resetColor = "|r"
 
 -- Database :
@@ -31,6 +33,11 @@ local specPrimaryName = nil
 local specSecondaryName = nil
 local specPrimaryIcon = nil
 local specSecondarIcon = nil
+
+local activeStats = nil
+local secondSpecsStats = nil
+local badStats = {"+", "Augmente"}
+local ignoreStats = {"(",")"}
 
 -- Obtenir l'icone de la spécialisation
 local function GetSpecIcon(specIndex)
@@ -97,13 +104,28 @@ end
 StatsPriorityColors.GetPlayerSpec = GetPlayerSpec
 
 -- Vérifier la pertinence d'une stat
-local function CheckStatRelevance(stat, activeStats, otherSpecsStats)  
-    if not stat then SPC:WriteLog(debugOutput.." [Error CheckStat as No stat...]", "STAT"); return nil, nil, nil end
+local function CheckStatRelevance(stat, activeStats, secondSpecsStats, badStats)  
+    if not stat then SPC:WriteLog(" [Error CheckStat as No stat...]", "STAT"); return nil, nil, nil end
     
     local debugOutput = "Checking stat: " .. tostring(stat or "nil")
     
     local primarySpecMatched = false
     local secondarySpecMatched = false
+    local badStatsMatched = false
+    
+    -- if detect set bonus stat then ignore this line...
+    local pattern = "("
+    if string.find(stat, pattern, 1, true) then
+        for n=1, 8 do
+            local ignoredStat = "("..tostring(n)..")"
+            if string.find(stat, ignoredStat, 1, true) then
+                debugOutput = debugOutput .. "[Matched ignored stat: " .. ignoredStat.."]"
+                SPC:WriteLog(debugOutput, "STAT")
+                return false, false, false
+            end
+        end
+    end
+    
     for _, relevantStat in ipairs(activeStats) do
         local pattern = relevantStat:lower()
         if string.find(stat:lower(), pattern, 1, true) then
@@ -113,22 +135,33 @@ local function CheckStatRelevance(stat, activeStats, otherSpecsStats)
         end
     end
     
-    for _, relevantStat in ipairs(otherSpecsStats) do
+    for _, relevantStat in ipairs(secondSpecsStats) do
         local pattern = relevantStat:lower()
         if string.find(stat:lower(), pattern, 1, true) then
-            debugOutput = debugOutput .. "[Matched other stat: " .. relevantStat.."]"
+            debugOutput = debugOutput .. "[Matched second stat: " .. relevantStat.."]"
             SPC:WriteLog(debugOutput, "STAT")
             secondarySpecMatched = true
         end
     end
     
-    if primarySpecMatched or secondarySpecMatched then
+    for _, relevantStat in ipairs(badStats) do
+        local pattern = relevantStat:lower()
+        if string.find(stat:lower(), pattern, 1, true) then
+            debugOutput = debugOutput .. "[Matched bad stat: " .. relevantStat.."]"
+            SPC:WriteLog(debugOutput, "STAT")
+            badStatsMatched = true
+        end
+    end
+    
+    if primarySpecMatched or secondarySpecMatched or badStatsMatched then
         if primarySpecMatched and secondarySpecMatched then
-            return true, "alls", "active_bright"
+            return true, "alls", primaryColor
         elseif primarySpecMatched then
-            return true, "active", "active_bright"
-        else
-            return true, "other", "other"
+            return true, "active", primaryColor
+        elseif secondarySpecMatched then
+            return true, "second", secondColor
+        elseif badStatsMatched then
+            return true, "badStats", badColor
         end
     end
     
@@ -137,51 +170,92 @@ end
 
 -- Modifier le tooltip
 local function ModifyTooltip(tooltip)
+    
+    if tooltip ~= GameTooltip then return end
+    
     SPC:WriteLog("ModifyTooltip called for " .. (tooltip:GetName() or "nil"), "TOOLTIP")
     
     if not tooltip then return end
+    if not class or not specPrimaryID then
+        class, specPrimaryID, specSecondaryID = GetPlayerSpec()
+        if not class or not specPrimaryID then return end
+    end
     
-    local class, specPrimaryID, specSecondaryID = GetPlayerSpec()
-    if not class or not specPrimaryID then return end
-    
-    local activeStats = specToStats[class][specPrimaryID] or {}
+    if not activeStats then
+        activeStats = specToStats[class][specPrimaryID] or {}
+    end
     if not activeStats[1] then return end
     
-    local otherSpecsStats = {}
-    if specSecondaryID then
+    if not secondSpecsStats then
+        secondSpecsStats = {}
+    end
+    if specSecondaryID and not secondSpecsStats[1] then
         if specToStats[class][specSecondaryID] then
             for _, stat in ipairs(specToStats[class][specSecondaryID]) do
-                table.insert(otherSpecsStats, stat)
+                table.insert(secondSpecsStats, stat)
             end
         end
     end
     
-    local specPrimaryName = specNames[class][specPrimaryID] or "Unknown"
-    local specSecondaryName = "Unknown"
-    if specSecondaryID then
+    if not specPrimaryName then
+        local specPrimaryName = specNames[class][specPrimaryID] or "Unknown"
+        local specSecondaryName = "Unknown"
+    end
+    
+    if specSecondaryID and not specSecondaryName then
         specSecondaryName = specNames[class][specSecondaryID] or "Unknown"
     end
+    
+    local count = {matched=false, primary = 0, secondary = 0, bad = 0}
     
     for i = 2, tooltip:NumLines() do
         local line = _G[tooltip:GetName() .. "TextLeft" .. i]
         local text = line and line:GetText()
+        
         if text then
-            local matchedStat, statType, _ = CheckStatRelevance(text, activeStats, otherSpecsStats)
+            local matchedStat, statType, color = CheckStatRelevance(text, activeStats, secondSpecsStats, badStats)
             if matchedStat then
-                local color = activeColorBright
+                count.matched = true
                 if statType == "alls" then
-                    line:SetText(color .. text .. " ("..specPrimaryName..","..specSecondaryName..") " .. resetColor)
-                    
+                    line:SetText(text..resetColor.." ["..primaryColor..specPrimaryName..resetColor.." + "..secondColor..specSecondaryName..resetColor.."]")
+                    count.primary = count.primary + 1
+                    count.secondary = count.secondary + 1
                 elseif statType == "active" then
-                    line:SetText(color .. text .. " ("..specPrimaryName..") ".. resetColor)
-                    
-                elseif statType == "other" then
-                    color = otherColor
-                    line:SetText(color .. text .. " ("..specSecondaryName..") ".. resetColor)
+                    line:SetText(text..resetColor.." ["..primaryColor..specPrimaryName..resetColor.."]")
+                    count.primary = count.primary + 1
+                elseif statType == "second" then
+                    line:SetText(text..resetColor.." ["..secondColor..specSecondaryName..resetColor.."]")
+                    count.secondary = count.secondary + 1
+                elseif statType == "badStats" then
+                    line:SetText(text..badColor.." [ BAD ]"..resetColor)
+                    count.bad = count.bad + 1
                 end
             end
         end
     end
+    
+    if count.matched then
+        local prim, sec, bad = false, false, false
+        if count.primary >= count.secondary and count.primary > count.bad then
+            prim = true
+        end
+        if count.secondary >= count.primary and count.secondary > count.bad then
+            sec = true
+        end
+        if count.bad >= count.primary and count.bad >= count.secondary then
+            bad = true
+        end
+        if prim and sec then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. greenColor.." This item is good for your spec :"..greenColor.." ["..primaryColor..specPrimaryName..greenColor.." + "..secondColor..specSecondaryName..greenColor.."]"..resetColor)
+        elseif prim then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. greenColor.." This item is good for your spec :"..greenColor.." ["..secondColor..specPrimaryName..greenColor.."]"..resetColor)
+        elseif sec then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. greenColor.." This item is good for your spec :"..greenColor.." ["..secondColor..specSecondaryName..greenColor.."]"..resetColor)
+        elseif bad then
+            tooltip:AddLine(primaryColor.."[Stats Priority] ".. badColor.." This item is not for you !"..resetColor)
+        end
+    end
+    
 end
 StatsPriorityColors.ModifyTooltip = ModifyTooltip
 
