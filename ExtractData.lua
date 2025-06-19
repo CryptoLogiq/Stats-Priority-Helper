@@ -1,11 +1,25 @@
 --[[
- Extract Data of "Wyr3d's IcyVeins Stats" addon ! stocked in stats.lua !!!
- source : https://www.curseforge.com/wow/addons/wyr3ds-icy-veins-statistic-prior/files/5700116
+Extract Data of "Wyr3d's IcyVeins Stats" addon ! stocked in stats.lua !!!
+source : https://www.curseforge.com/wow/addons/wyr3ds-icy-veins-statistic-prior/files/5700116
 ]]--
 
 local addonName, StatsPriorityHelper = ...
-StatsPriorityHelper.ExtractData = {}
-local ExtractData = StatsPriorityHelper.ExtractData
+
+local AceGUI = LibStub("AceGUI-3.0")
+local AceDB = LibStub("AceDB-3.0")
+local AceConsole = LibStub("AceConsole-3.0")
+local AceConfig = LibStub("AceConfig-3.0")
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local SPH = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityHelper")
+StatsPriorityHelper = SPH
+
+SPH.ExtractData = {}
+
+
+local StatsSPH = SPH.StatsSPH
+local specNames = SPH.specNames
+
+local ExtractData = SPH.ExtractData
 
 -- Déclarer la SavedVariables
 MyAddonStatPriorities = MyAddonStatPriorities or {}
@@ -93,4 +107,16 @@ function ExtractData:AddToTooltip(tooltip)
         end
         tooltip:AddLine("Priorité " .. i .. ": " .. table.concat(statNames, " = "))
     end
+end
+
+function  ExtractData.AddStatPriority(pClass)
+    if not StatsSPH[pClass] then
+        StatsSPH[pClass] = {}
+    end
+end
+
+function  ExtractData.SetPriority(specName, textImport)
+    if not StatsSPH[pClass][specName] then ] StatsSPH[pClass][specName] = {} end
+    local currSpec = StatsSPH[pClass][specName]
+    
 end

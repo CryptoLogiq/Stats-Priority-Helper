@@ -23,7 +23,7 @@ local greenColor = "|cFFAAD372"        -- Red (#00FFFF), mets en rouge car on s'
 local resetColor = "|r"
 
 -- Database :
-local specToStats = SPH.specToStats or {}
+local StatsSPH = SPH.StatsSPH or {}
 local specNames = SPH.specNames or {}
 
 -- var locales for self player connected
@@ -185,7 +185,7 @@ local function ModifyTooltip(tooltip)
     end
     
     if not activeStats then
-        activeStats = specToStats[class][specPrimaryID] or {}
+        activeStats = StatsSPH[class][specPrimaryID] or {}
     end
     if not activeStats[1] then return end
     
@@ -193,8 +193,8 @@ local function ModifyTooltip(tooltip)
         secondSpecsStats = {}
     end
     if specSecondaryID and not secondSpecsStats[1] then
-        if specToStats[class][specSecondaryID] then
-            for _, stat in ipairs(specToStats[class][specSecondaryID]) do
+        if StatsSPH[class][specSecondaryID] then
+            for _, stat in ipairs(StatsSPH[class][specSecondaryID]) do
                 table.insert(secondSpecsStats, stat)
             end
         end
