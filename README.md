@@ -1,6 +1,6 @@
-# StatsPriorityColors
+# StatsPriorityHelper
 
-**StatsPriorityColors** is a lightweight World of Warcraft addon designed for **Cataclysm Classic** (Interface 40400). It enhances item tooltips by color-coding stats based on their relevance to your character's specialization, helping you quickly identify gear that suits your playstyle.
+**StatsPriorityHelper** is a lightweight World of Warcraft addon designed for **Cataclysm Classic** (Interface 40400). It enhances item tooltips by color-coding stats based on their relevance to your character's specialization, helping you quickly identify gear that suits your playstyle.
 
 ## Features
 
@@ -11,8 +11,8 @@
 
 ## Installation
 
-1. **Download** the latest release from the [Releases](https://github.com/CryptoLogiq/StatsPriorityColors/releases) page or clone the repository.
-2. **Extract** the `StatsPriorityColors` folder to your WoW AddOns directory:
+1. **Download** the latest release from the [Releases](https://github.com/CryptoLogiq/StatsPriorityHelper/releases) page or clone the repository.
+2. **Extract** the `StatsPriorityHelper` folder to your WoW AddOns directory:
 3. **Launch WoW**: Ensure the addon is enabled in the AddOns menu at the character selection screen.
 4. **Enjoy**: Hover over items in-game to see color-coded stats in tooltips!
 
@@ -22,7 +22,7 @@
 - When you hover over an item, relevant stats are highlighted:
   - **Bright Orange**: Stats optimal for your current specialization.
   - **Purple**: Stats useful for other specializations of your class.
-- Logs are saved to help diagnose any issues (stored in `WTF\Account\<YourAccount>\SavedVariables\StatsPriorityColors.lua`).
+- Logs are saved to help diagnose any issues (stored in `WTF\Account\<YourAccount>\SavedVariables\StatsPriorityHelper.lua`).
 
 ## Compatibility
 
@@ -43,10 +43,10 @@ Please include a clear description of your changes and test them in-game before 
 
 ## Issues
 
-Found a bug or have a suggestion? Open an issue on the [Issues](https://github.com/CryptoLogiq/StatsPriorityColors/issues) page. Include:
+Found a bug or have a suggestion? Open an issue on the [Issues](https://github.com/CryptoLogiq/StatsPriorityHelper/issues) page. Include:
 - A detailed description of the problem or suggestion.
 - Steps to reproduce the issue (if applicable).
-- Any relevant logs from `SavedVariables\StatsPriorityColors.lua`.
+- Any relevant logs from `SavedVariables\StatsPriorityHelper.lua`.
 
 ## Credits
 

@@ -1,9 +1,9 @@
 ## Interface: 40400
-## Title: StatsPriorityColors
+## Title: StatsPriorityHelper
 ## Notes: Changes la couleur des stats pertinentes dans les tooltips des objets en fonction de la spécialisation du joueur.
 ## Author: Crypto_Logiq
 ## Version: 1.0
-## SavedVariablesPerCharacter: StatsPriorityColors
+## SavedVariablesPerCharacter: StatsPriorityHelper
 
 libs/Ace3/AceAddon-3.0/AceAddon-3.0.xml
 libs/Ace3/AceConfig-3.0/AceConfig-3.0.xml
@@ -12,6 +12,9 @@ libs/Ace3/AceDB-3.0/AceDB-3.0.xml
 libs/Ace3/AceEvent-3.0/AceEvent-3.0.xml
 libs/Ace3/AceGUI-3.0/AceGUI-3.0.xml
 
-Debug.lua
-Database.lua
 Core.lua
+Debug.lua
+SPH_Database.lua
+RevelantStat.lua
+ExtractData.lua
+Wyr3ed_Addon_Source_Data/stats.lua

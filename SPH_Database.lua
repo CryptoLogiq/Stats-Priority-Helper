@@ -1,8 +1,8 @@
-local addonName, StatsPriorityColors = ...
+local addonName, StatsPriorityHelper = ...
 
 -- Stocker l'addon dans une table globale
 -- if not _G[addonName] then
---     _G[addonName] = StatsPriorityColors
+--     _G[addonName] = StatsPriorityHelper
 -- end
 
 local AceGUI = LibStub("AceGUI-3.0")
@@ -10,12 +10,7 @@ local AceDB = LibStub("AceDB-3.0")
 local AceConsole = LibStub("AceConsole-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-local SPC = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityColors")
-
--- Correspondance des noms de classes localisés vers l'anglais
-local classLocalization = {
-    ["Paladine"] = "PALADIN",
-}
+local SPH = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityHelper")
 
 -- Correspondance des spécialisations aux stats pertinentes (en français)
 local specToStats = {
@@ -35,6 +30,5 @@ local specNames = {
     }
 }
 
-SPC.classLocalization = classLocalization
-SPC.specToStats = specToStats
-SPC.specNames = specNames
+SPH.specToStats = specToStats
+SPH.specNames = specNames
