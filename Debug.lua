@@ -1,10 +1,12 @@
-local addonName, addon = ...
+local addonName, StatsPriorityHelper = ...
 local AceGUI = LibStub("AceGUI-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConsole = LibStub("AceConsole-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-local SPC = LibStub("AceAddon-3.0"):NewAddon("StatsPriorityColors", "AceEvent-3.0")
+local SPH = LibStub("AceAddon-3.0"):NewAddon("StatsPriorityHelper", "AceEvent-3.0")
+
+StatsPriorityHelper = SPH
 
 -- Valeurs par défaut
 local defaults = {
@@ -41,7 +43,7 @@ local categoryColors = {
 local categories = { "All", "SPEC", "TOOLTIP", "STAT", "INIT", "EVENT", "COLOR", "DEBUG" }
 
 -- Fonction de journalisation
-function SPC:WriteLog(message, category)
+function SPH:WriteLog(message, category)
     if self.db then
         
         if not self.db.char.settings.debugEnabled then return end
@@ -59,36 +61,36 @@ function SPC:WriteLog(message, category)
                 g = tonumber(color:match("^|cFF%x%x(%x%x)"), 16) / 255
                 b = tonumber(color:match("^|cFF%x%x%x%x(%x%x)"), 16) / 255
             end
-            DEFAULT_CHAT_FRAME:AddMessage("[SPC][" .. category .. "] " .. message, r, g, b)
+            DEFAULT_CHAT_FRAME:AddMessage("[SPH][" .. category .. "] " .. message, r, g, b)
         end
         
     end
 end
 
 -- Fenêtre de débogage
-function SPC:ShowDebugWindow()
-    if not SPC.debugWindow then
-        SPC.debugWindow = AceGUI:Create("Frame")
-        SPC.debugWindow:SetTitle("StatsPriorityColors Debug")
-        SPC.debugWindow:SetWidth(800)
-        SPC.debugWindow:SetHeight(400)
-        SPC.debugWindow:EnableResize(false)
-        SPC.debugWindow:SetLayout("Flow")
+function SPH:ShowDebugWindow()
+    if not SPH.debugWindow then
+        SPH.debugWindow = AceGUI:Create("Frame")
+        SPH.debugWindow:SetTitle("StatsPriorityHelper Debug")
+        SPH.debugWindow:SetWidth(800)
+        SPH.debugWindow:SetHeight(400)
+        SPH.debugWindow:EnableResize(false)
+        SPH.debugWindow:SetLayout("Flow")
         
         -- Cadre gauche pour la navigation
         local leftGroup = AceGUI:Create("SimpleGroup")
         leftGroup:SetLayout("List")
         leftGroup:SetWidth(100)
         leftGroup:SetFullHeight(true)
-        SPC.debugWindow:AddChild(leftGroup)
+        SPH.debugWindow:AddChild(leftGroup)
         
         -- Boutons de navigation
         local logsBtn = AceGUI:Create("Button")
         logsBtn:SetText("Logs")
         logsBtn:SetWidth(98)
         logsBtn:SetCallback("OnClick", function()
-            SPC.currentPanel = "logs"
-            SPC:ShowLogsPanel()
+            SPH.currentPanel = "logs"
+            SPH:ShowLogsPanel()
         end)
         leftGroup:AddChild(logsBtn)
         
@@ -96,8 +98,8 @@ function SPC:ShowDebugWindow()
         optionsBtn:SetText("Options")
         optionsBtn:SetWidth(98)
         optionsBtn:SetCallback("OnClick", function()
-            SPC.currentPanel = "options"
-            SPC:ShowOptionsPanel()
+            SPH.currentPanel = "options"
+            SPH:ShowOptionsPanel()
         end)
         leftGroup:AddChild(optionsBtn)
         
@@ -106,36 +108,36 @@ function SPC:ShowDebugWindow()
         rightGroup:SetLayout("Fill")
         rightGroup:SetWidth(700)
         rightGroup:SetFullHeight(true)
-        SPC.debugWindow:AddChild(rightGroup)
+        SPH.debugWindow:AddChild(rightGroup)
         
         -- Stocker les références
-        SPC.debugWindow.leftGroup = leftGroup
-        SPC.debugWindow.rightGroup = rightGroup
+        SPH.debugWindow.leftGroup = leftGroup
+        SPH.debugWindow.rightGroup = rightGroup
         
         -- Afficher le panneau Logs initialement
-        SPC.currentPanel = "logs"
-        SPC:ShowLogsPanel()
+        SPH.currentPanel = "logs"
+        SPH:ShowLogsPanel()
     else
-        if SPC.currentPanel == "logs" then
-            SPC:ShowLogsPanel()
-        elseif SPC.currentPanel == "options" then
-            SPC:ShowOptionsPanel()
+        if SPH.currentPanel == "logs" then
+            SPH:ShowLogsPanel()
+        elseif SPH.currentPanel == "options" then
+            SPH:ShowOptionsPanel()
         end
     end
-    SPC.debugWindow:Show()
-    SPC.debugWindow.isHidden = false
+    SPH.debugWindow:Show()
+    SPH.debugWindow.isHidden = false
 end
 
-function SPC:HideDebugWindow()
-    if SPC.debugWindow then
-        SPC.debugWindow:Hide()
-        SPC.debugWindow.isHidden = true
+function SPH:HideDebugWindow()
+    if SPH.debugWindow then
+        SPH.debugWindow:Hide()
+        SPH.debugWindow.isHidden = true
     end
 end
 
 -- Afficher le panneau Logs
-function SPC:ShowLogsPanel()
-    local rightGroup = SPC.debugWindow.rightGroup
+function SPH:ShowLogsPanel()
+    local rightGroup = SPH.debugWindow.rightGroup
     rightGroup:ReleaseChildren()
     
     -- Sous-cadre supérieur pour les onglets
@@ -150,7 +152,7 @@ function SPC:ShowLogsPanel()
         btn:SetText(cat)
         btn:SetWidth(98)
         btn:SetCallback("OnClick", function()
-            SPC:DisplayLogs(cat)
+            SPH:DisplayLogs(cat)
         end)
         topTabs:AddChild(btn)
     end
@@ -163,12 +165,12 @@ function SPC:ShowLogsPanel()
     rightGroup:AddChild(contentArea)
     
     -- Afficher les logs "All" initialement
-    SPC:DisplayLogs("All")
+    SPH:DisplayLogs("All")
 end
 
 -- Afficher les logs pour une catégorie
-function SPC:DisplayLogs(category)
-    local rightGroup = SPC.debugWindow.rightGroup
+function SPH:DisplayLogs(category)
+    local rightGroup = SPH.debugWindow.rightGroup
     local contentArea = rightGroup.children[2]
     if not contentArea then return end
     contentArea:ReleaseChildren()
@@ -197,8 +199,8 @@ function SPC:DisplayLogs(category)
 end
 
 -- Afficher le panneau Options
-function SPC:ShowOptionsPanel()
-    local rightGroup = SPC.debugWindow.rightGroup
+function SPH:ShowOptionsPanel()
+    local rightGroup = SPH.debugWindow.rightGroup
     rightGroup:ReleaseChildren()
     
     -- Sous-cadre supérieur pour les onglets
@@ -214,7 +216,7 @@ function SPC:ShowOptionsPanel()
         btn:SetText(tab)
         btn:SetWidth(98)
         btn:SetCallback("OnClick", function()
-            SPC:DisplayOptions(tab)
+            SPH:DisplayOptions(tab)
         end)
         topTabs:AddChild(btn)
     end
@@ -227,12 +229,12 @@ function SPC:ShowOptionsPanel()
     rightGroup:AddChild(contentArea)
     
     -- Afficher l’onglet "Debug" initialement
-    SPC:DisplayOptions("Debug")
+    SPH:DisplayOptions("Debug")
 end
 
 -- Afficher le contenu des options
-function SPC:DisplayOptions(tab)
-    local rightGroup = SPC.debugWindow.rightGroup
+function SPH:DisplayOptions(tab)
+    local rightGroup = SPH.debugWindow.rightGroup
     local contentArea = rightGroup.children[2]
     if not contentArea then return end
     contentArea:ReleaseChildren()
@@ -241,22 +243,22 @@ function SPC:DisplayOptions(tab)
         -- Case à cocher pour activer le débogage
         local debugToggle = AceGUI:Create("CheckBox")
         debugToggle:SetLabel("Activer le débogage")
-        debugToggle:SetValue(SPC.db.char.settings.debugEnabled)
+        debugToggle:SetValue(SPH.db.char.settings.debugEnabled)
         debugToggle:SetDescription("Active ou désactive les messages de débogage dans le chat.")
         debugToggle:SetCallback("OnValueChanged", function(widget, event, value)
-            SPC.db.char.settings.debugEnabled = value
-            SPC:WriteLog("Débogage " .. (value and "activé" or "désactivé"), "DEBUG")
+            SPH.db.char.settings.debugEnabled = value
+            SPH:WriteLog("Débogage " .. (value and "activé" or "désactivé"), "DEBUG")
         end)
         contentArea:AddChild(debugToggle)
         
         -- Case à cocher pour les logs dans le chat
         local chatToggle = AceGUI:Create("CheckBox")
         chatToggle:SetLabel("Afficher les logs dans le chat")
-        chatToggle:SetValue(SPC.db.char.settings.chatOutputEnabled)
+        chatToggle:SetValue(SPH.db.char.settings.chatOutputEnabled)
         chatToggle:SetDescription("Affiche les messages de débogage dans la fenêtre de chat.")
         chatToggle:SetCallback("OnValueChanged", function(widget, event, value)
-            SPC.db.char.settings.chatOutputEnabled = value
-            SPC:WriteLog("Logs dans le chat " .. (value and "activés" or "désactivés"), "DEBUG")
+            SPH.db.char.settings.chatOutputEnabled = value
+            SPH:WriteLog("Logs dans le chat " .. (value and "activés" or "désactivés"), "DEBUG")
         end)
         contentArea:AddChild(chatToggle)
     elseif tab == "Personnage" then
@@ -268,13 +270,13 @@ function SPC:DisplayOptions(tab)
 end
 
 -- Initialisation
-function SPC:OnInitialize()
-    self.db = AceDB:New("StatsPriorityColors", defaults, true)
+function SPH:OnInitialize()
+    self.db = AceDB:New("StatsPriorityHelper", defaults, true)
     self:WriteLog("Système de débogage initialisé", "INIT")
     
     -- Définir les options pour le menu in-game
     local options = {
-        name = "StatsPriorityColors",
+        name = "StatsPriorityHelper",
         type = "group",
         args = {
             debugEnabled = {
@@ -299,8 +301,8 @@ function SPC:OnInitialize()
             },
         },
     }
-    AceConfig:RegisterOptionsTable("StatsPriorityColors", options)
-    AceConfigDialog:AddToBlizOptions("StatsPriorityColors", "StatsPriorityColors")
+    AceConfig:RegisterOptionsTable("StatsPriorityHelper", options)
+    AceConfigDialog:AddToBlizOptions("StatsPriorityHelper", "StatsPriorityHelper")
 end
 
 -- Commandes slash
@@ -308,15 +310,15 @@ AceConsole:RegisterChatCommand("spc", function(input)
     local command, subcommand = strsplit(" ", input)
     if command == "debug" then
         if subcommand == "show" then
-            SPC:ShowDebugWindow()
+            SPH:ShowDebugWindow()
         elseif subcommand == "hide" then
-            SPC:HideDebugWindow()
+            SPH:HideDebugWindow()
         elseif subcommand == "toggle" then
-            SPC.debugWindow.isHidden = not SPC.debugWindow.isHidden
-            if SPC.debugWindow.isHidden then
-                SPC:HideDebugWindow()
+            SPH.debugWindow.isHidden = not SPH.debugWindow.isHidden
+            if SPH.debugWindow.isHidden then
+                SPH:HideDebugWindow()
             else
-                SPC:ShowDebugWindow()
+                SPH:ShowDebugWindow()
             end
         end
     end

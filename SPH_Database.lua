@@ -1,24 +1,15 @@
-local addonName, StatsPriorityColors = ...
-
--- Stocker l'addon dans une table globale
--- if not _G[addonName] then
---     _G[addonName] = StatsPriorityColors
--- end
+local addonName, StatsPriorityHelper = ...
 
 local AceGUI = LibStub("AceGUI-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConsole = LibStub("AceConsole-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
-local SPC = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityColors")
-
--- Correspondance des noms de classes localisés vers l'anglais
-local classLocalization = {
-    ["Paladine"] = "PALADIN",
-}
+local SPH = LibStub("AceAddon-3.0"):GetAddon("StatsPriorityHelper")
+StatsPriorityHelper = SPH
 
 -- Correspondance des spécialisations aux stats pertinentes (en français)
-local specToStats = {
+local StatsSPH = {
     ["PALADIN"] = {
         {"Intelligence", "Puissance des sorts", "Hâte", "Esprit", "Critique", "Maîtrise" },-- 1 Sacré
         { "Endurance", "Maîtrise", "Toucher", "Expertise", "Esquive", "Parade", "Critique" },-- 2 Protection
@@ -26,7 +17,16 @@ local specToStats = {
     }
 }
 
--- Noms des spécialisations (pour affichage)
+-- Noms des spécialisations defini par Blizzard
+local specTalentChoice = {
+    ["PALADIN"] = {
+        [1] = "Sacré",
+        [2] = "Protection",
+        [3] = "Rétribution"
+    }
+}
+
+-- Noms des spécialisations defini par la communauté
 local specNames = {
     ["PALADIN"] = {
         [1] = "Sacré",
@@ -35,6 +35,5 @@ local specNames = {
     }
 }
 
-SPC.classLocalization = classLocalization
-SPC.specToStats = specToStats
-SPC.specNames = specNames
+SPH.StatsSPH = StatsSPH
+SPH.specNames = specNames
