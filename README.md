@@ -6,12 +6,23 @@
 
 - **Dynamic Stat Highlighting**: Stats relevant to your current specialization are highlighted in **bright orange**, while stats useful for other specializations of your class are shown in **purple**.
 - **Seamless Integration**: Automatically updates when you change your specialization, ensuring accurate stat highlighting.
-- **Performance-Friendly**: Built to be lightweight with minimal impact on game performance.
-- **Debug Logging**: Includes a robust logging system to help troubleshoot issues (saved per character).
+
+- It's not a comparaison with your current gear, it's just for help you for choices of your pieces of gear.
 
 (Alpha preview, not representative to actually state of addon.)
 
 https://github.com/user-attachments/assets/6cb265ea-c9e5-4900-ae73-63bf199a1dec
+
+## Examples with items
+
+__Example with item recommandation for you :__
+
+![image](https://github.com/user-attachments/assets/9de8c9db-c268-443b-8840-427e53df223f)
+
+
+__Example with item not recommanded for your specs :__
+
+![image](https://github.com/user-attachments/assets/172b73a7-b243-454b-87b9-27bc98ce6d69)
 
 ## Installation
 
