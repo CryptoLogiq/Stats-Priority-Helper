@@ -27,7 +27,7 @@ __Example with item not recommanded for your specs :__
 ## Installation
 
 1. **Download** the latest release from the [Releases](https://github.com/CryptoLogiq/Stats-Priority-Helper/releases) page or clone the repository.
-2. **Extract** the `Stats Priority Helper` folder to your WoW AddOns directory:
+2. **Extract** the `Stats Priority Helper` folder to your WoW AddOns directory: "World of Warcraft/.../Interface/Addons/"
 3. **Launch WoW**: Ensure the addon is enabled in the AddOns menu at the character selection screen.
 4. **Enjoy**: Hover over items in-game to see color-coded stats in tooltips!
 
