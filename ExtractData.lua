@@ -34,11 +34,10 @@ local validStats = {
 -- Fonction pour parser les priorités de stats avec pourcentages
 function ExtractData:Parse(input)
     local priorities = {}
-    local currentGroup = {}
     
     -- Séparer par ">" pour les niveaux de priorité
     for segment in input:gmatch("[^>]+") do
-        currentGroup = {}
+        local currentGroup = {}
         -- Séparer par "=" pour les stats de même poids
         for stat in segment:gmatch("[^=]+") do
             stat = stat:gsub("^%s*(.-)%s*$", "%1")
@@ -72,9 +71,6 @@ end
 
 local lastClass = "Unknow"
 function  ExtractData.AddStatPriority(_, pClass)
-    if not StatsSPH[pClass] then
-        StatsSPH[pClass] = {}
-    end
     lastClass = pClass
 end
 
