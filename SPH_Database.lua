@@ -1,10 +1,5 @@
 local addonName, StatsPriorityHelper = ...
 
--- Stocker l'addon dans une table globale
--- if not _G[addonName] then
---     _G[addonName] = StatsPriorityHelper
--- end
-
 local AceGUI = LibStub("AceGUI-3.0")
 local AceDB = LibStub("AceDB-3.0")
 local AceConsole = LibStub("AceConsole-3.0")

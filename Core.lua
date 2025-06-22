@@ -19,14 +19,19 @@ SPH.IsWotLK = WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC
 SPH.IsCata = WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC
 
 SPH.versionGame = "Unknow"
-if AddOn.IsClassic then
+if SPH.IsClassic then
     SPH.versionGame = "Classic"
-elseif AddOn.IsBCC then
+elseif SPH.IsBCC then
     SPH.versionGame = "Burning Crusade"
-elseif AddOn.IsWotLK then
+elseif SPH.IsWotLK then
     SPH.versionGame = "Wotlk"
-elseif AddOn.IsCata then
+elseif SPH.IsCata then
     SPH.versionGame = "Cataclysm"
 else
     SPH.versionGame = "Retail"
+end
+
+-- Vérifier si l'addon Wyr3d est chargé
+function SPH.IsWyr3dAddonLoaded()
+    return IsAddOnLoaded("Wyr3dsIcyVeinsStatsPriorities")
 end

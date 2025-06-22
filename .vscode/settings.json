@@ -37,5 +37,10 @@
         "CANCEL",
         "Settings",
         "class"
+    ],
+    "Lua.diagnostics.disable": [
+        "inject-field",
+        "undefined-global",
+        "undefined-field"
     ]
 }
